@@ -3,6 +3,7 @@ package com.github.dirkraft.propslive.dynamic;
 import com.github.dirkraft.propslive.PropConfig;
 import com.github.dirkraft.propslive.PropConfigSetValues;
 import com.github.dirkraft.propslive.PropConfigSetsImpl;
+import com.github.dirkraft.propslive.PropertySource;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

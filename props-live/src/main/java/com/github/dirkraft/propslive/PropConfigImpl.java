@@ -2,9 +2,6 @@ package com.github.dirkraft.propslive;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Map;
-import java.util.Properties;
-
 /**
  * Implementation of PropConfig which does some basic String manip (trim, blank checkes) before delegating all access
  * to a {@link PropertySource}.
@@ -13,54 +10,13 @@ import java.util.Properties;
  */
 public class PropConfigImpl implements PropConfig {
 
-    /**
-     * Base abstraction of where to read/write properties. About as simple as {@link Properties} or a
-     * {@link Map Map&lt;String, String&gt;}
-     */
-    protected interface PropertySource {
-        /**
-         * @return description to help identify this property source, e.g. system properties, config.properties file, ...
-         */
-        String description();
-
-        /**
-         * @param key name of the property
-         * @return corresponding value or <code>null</code> if the property was not set (or set to <code>null</code>,
-         *         you devil, you)
-         */
-        String getProp(String key);
-
-        /**
-         * @param key to put value against
-         * @param value to store at the key
-         */
-        PropertySource setProp(String key, String value);
-    }
-
     protected final PropertySource source;
 
     /**
      * Defaults the {@link #source} to system properties.
      */
     public PropConfigImpl() {
-        source = new PropertySource() {
-            @Override
-            public String description() {
-                return "System properties";
-            }
-
-            @Override
-            public String getProp(String key) {
-                return System.getProperty(key);
-
-            }
-
-            @Override
-            public PropertySource setProp(String key, String value) {
-                System.setProperty(key, value);
-                return this;
-            }
-        };
+        source = new PropertySourceSysProps();
     }
 
     /**
