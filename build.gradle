@@ -1,0 +1,76 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'eu.appsatori:gradle-fatjar-plugin:0.2-rc1'
+    }
+
+}
+
+allprojects {
+    apply plugin: 'idea'
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven'
+    apply plugin: 'fatjar'
+
+    group = 'com.github.dirkraft'
+
+    configurations {
+        // use commons-lang3 only
+        all*.exclude group: 'commons-lang', module:'commons-lang', version:'2.6'
+    }
+
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
+
+    dependencies {
+
+        compile 'ch.qos.logback:logback-classic:1.0.7'
+
+        // test components
+        testCompile 'junit:junit:4.10'
+        testCompile 'org.mockito:mockito-core:1.9.0'
+    }
+
+    task sourcesJar(type: Jar) {
+        from sourceSets.main.allSource
+        classifier = 'sources'
+        manifest {
+            def git_cmd = 'git rev-parse HEAD'
+            def git_proc = git_cmd.execute()
+            attributes 'SCM-Revision': git_proc.text.trim()
+            attributes 'Timestamp': String.valueOf(System.currentTimeMillis())
+            attributes 'Build-Host': InetAddress.localHost.hostName
+        }
+    }
+
+    artifacts {
+        archives sourcesJar
+    }
+
+    fatJar {
+        manifest {
+            def git_cmd = 'git rev-parse HEAD'
+            def git_proc = git_cmd.execute()
+            attributes 'SCM-Revision': git_proc.text.trim()
+            attributes 'Timestamp': String.valueOf(System.currentTimeMillis())
+            attributes 'Build-Host': InetAddress.localHost.hostName
+        }
+    }
+
+    // essentially replace the jar task with fatJar
+    jar.dependsOn(fatJar)
+    jar {
+        enabled = false
+    }
+}
+
+idea.project.languageLevel = 1.7
