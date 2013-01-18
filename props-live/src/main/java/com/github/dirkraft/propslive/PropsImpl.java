@@ -8,21 +8,21 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author jason
  */
-public class PropConfigImpl implements PropConfig {
+public class PropsImpl implements Props {
 
     protected final PropertySource source;
 
     /**
      * Defaults the {@link #source} to system properties.
      */
-    public PropConfigImpl() {
+    public PropsImpl() {
         source = new PropertySourceSysProps();
     }
 
     /**
      * @param source accept an arbitrary PropertySource instead of using system properties
      */
-    public PropConfigImpl(PropertySource source) {
+    public PropsImpl(PropertySource source) {
         this.source = source;
     }
 

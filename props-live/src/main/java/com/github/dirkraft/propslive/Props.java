@@ -2,11 +2,11 @@ package com.github.dirkraft.propslive;
 
 /**
  * Configuration in the style of mapped properties. A great default implementation is available which is based on
- * {@link PropConfigImpl#PropConfigImpl() system properties}.
+ * {@link PropsImpl#PropsImpl() system properties}.
  *
  * @author jason
  */
-public interface PropConfig {
+public interface Props {
 
     /**
      * @return a description of the property source behind this PropConfig

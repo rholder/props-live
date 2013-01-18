@@ -1,8 +1,8 @@
 package com.github.dirkraft.propslive.dynamic;
 
-import com.github.dirkraft.propslive.PropConfig;
-import com.github.dirkraft.propslive.PropConfigSetValues;
-import com.github.dirkraft.propslive.PropConfigSetsImpl;
+import com.github.dirkraft.propslive.PropsSet;
+import com.github.dirkraft.propslive.PropsSetsImpl;
+import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.PropertySource;
 
 import java.lang.reflect.InvocationHandler;
@@ -14,9 +14,9 @@ import java.util.HashMap;
  * Implementors of this class may initialize defaults in the constructor if desired, e.g. {@link #set(String, String)}
  * et. al.
  * <p/>
- * Calls to {@link #getValuesSet(PropConfig)} will first check the given config before falling back to defaults in
+ * Calls to {@link #getValuesSet(Props)} will first check the given config before falling back to defaults in
  * this DefaultingPropConfigSetReader. The implementor of the corollary method
- * {@link #getValuesSetWithDefaults(PropConfig)} should thus not worry about defaults beyond that which is immediately
+ * {@link #getValuesSetWithDefaults(Props)} should thus not worry about defaults beyond that which is immediately
  * set up in the constructor.
  * <p/>
  * I.e. don't call prop val getters which have a second default-value argument. There is a sanity check which may
@@ -24,25 +24,25 @@ import java.util.HashMap;
  *
  * @author jason
  */
-public abstract class DefaultingPropConfigSetReader<VALUES extends PropConfigSetValues> extends PropConfigSetsImpl {
+public abstract class DefaultingPropSetReader<VALUES extends PropsSet> extends PropsSetsImpl {
 
     /**
      * @param propertySourceDescription basis of the custom populated properties that will go into this instance
      */
-    public DefaultingPropConfigSetReader(String propertySourceDescription) {
+    public DefaultingPropSetReader(String propertySourceDescription) {
         // This property source is of the defaults, NOT the master property config records.
         super(new DefaultsMapPropertySource(propertySourceDescription));
     }
 
     /**
-     * {@link #getValuesSetWithDefaults(PropConfig)} is the implementation corollary to this method.
+     * {@link #getValuesSetWithDefaults(Props)} is the implementation corollary to this method.
      *
      * @param propConfig to check first before falling back to this DefaultingPropConfigSetReader's set default prop vals.
      * @return an instance of the VALUES class that wraps up a logical set of property values
      */
-    public VALUES getValuesSet(final PropConfig propConfig) {
-        PropConfig proxiedForDefaultsFallback = (PropConfig) Proxy.newProxyInstance(
-                getClass().getClassLoader(), new Class<?>[]{PropConfig.class},
+    public VALUES getValuesSet(final Props propConfig) {
+        Props proxiedForDefaultsFallback = (Props) Proxy.newProxyInstance(
+                getClass().getClassLoader(), new Class<?>[]{Props.class},
                 new InvocationHandler() {
                     @Override
                     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -57,7 +57,7 @@ public abstract class DefaultingPropConfigSetReader<VALUES extends PropConfigSet
                         Object propVal = method.invoke(propConfig, args);
                         if (propVal == null) {
                             // fallback to defaults
-                            propVal = method.invoke(DefaultingPropConfigSetReader.this, args);
+                            propVal = method.invoke(DefaultingPropSetReader.this, args);
                         }
                         return propVal;
                     }
@@ -66,7 +66,7 @@ public abstract class DefaultingPropConfigSetReader<VALUES extends PropConfigSet
     }
 
     /**
-     * {@link #getValuesSet(PropConfig)} is the <code>public</code> corollary to this method.
+     * {@link #getValuesSet(Props)} is the <code>public</code> corollary to this method.
      * <p/>
      * Implementor should return a <code>VALUES</code> type object which does it's lookups against the given PropConfig
      * impl. The PropConfig argument implementation automatically falls back to defaults set up in this
@@ -75,7 +75,7 @@ public abstract class DefaultingPropConfigSetReader<VALUES extends PropConfigSet
      * @param propConfig to perform lookups against
      * @return an instance of the VALUES class that wraps up a logical set of property values
      */
-    protected abstract VALUES getValuesSetWithDefaults(PropConfig propConfig);
+    protected abstract VALUES getValuesSetWithDefaults(Props propConfig);
 
     /**
      * PropertySource implementation that is a Map, which we can put arbitrary info into. In this case it will hold
