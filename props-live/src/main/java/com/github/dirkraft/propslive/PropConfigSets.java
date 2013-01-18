@@ -11,7 +11,7 @@ import com.github.dirkraft.propslive.dynamic.DynamicConfig;
  */
 public interface PropConfigSets extends PropConfig {
     /**
-     * @param cfgSetReader that will construct a values set ({@link VALUES} impl) based on this PropConfig
+     * @param cfgSetReader that will construct a values set based on this PropConfig
      * @param <VALUES> wrapper class returned by the impl of {@link DefaultingPropConfigSetReader#getValuesSet(PropConfig)}
      * @return set of related property values encapsulated in the
      * @see DefaultingPropConfigSetReader#getValuesSet(PropConfig)

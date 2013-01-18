@@ -68,8 +68,8 @@ public abstract class DefaultingPropConfigSetReader<VALUES extends PropConfigSet
     /**
      * {@link #getValuesSet(PropConfig)} is the <code>public</code> corollary to this method.
      * <p/>
-     * Implementor should return a {@link VALUES} type object which does it's lookups against the given PropConfig impl.
-     * The PropConfig argument implementation automatically falls back to defaults set up in this
+     * Implementor should return a <code>VALUES</code> type object which does it's lookups against the given PropConfig
+     * impl. The PropConfig argument implementation automatically falls back to defaults set up in this
      * DefaultingPropConfigSetReader. The implementor of this method should not particularly worry about
      *
      * @param propConfig to perform lookups against

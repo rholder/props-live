@@ -1,9 +1,20 @@
+/** Function always returns a new manifest that can be customized */
+def defaultManifest() {
+    return manifest{
+        def git_cmd = "git rev-parse HEAD"
+        def git_proc = git_cmd.execute()
+        attributes 'SCM-Revision': git_proc.text.trim()
+        attributes 'Timestamp': String.valueOf(System.currentTimeMillis())
+        attributes 'Build-Host': InetAddress.localHost.hostName
+    }
+}
+
 allprojects {
     apply plugin: 'idea'
+    apply plugin: 'java'
 }
 
 subprojects {
-    apply plugin: 'java'
     apply plugin: 'maven'
     apply plugin: 'signing'
 
@@ -28,30 +39,19 @@ subprojects {
     }
 
     jar {
-        manifest {
-            def git_cmd = 'git rev-parse HEAD'
-            def git_proc = git_cmd.execute()
-            attributes 'SCM-Revision': git_proc.text.trim()
-            attributes 'Timestamp': String.valueOf(System.currentTimeMillis())
-            attributes 'Build-Host': InetAddress.localHost.hostName
-        }
+        manifest = defaultManifest()
     }
 
     task javadocJar(type: Jar, dependsOn: javadoc) {
         classifier = 'javadoc'
         from 'build/docs/javadoc'
+        manifest = defaultManifest()
     }
 
     task sourcesJar(type: Jar) {
-        from sourceSets.main.allSource
         classifier = 'sources'
-        manifest {
-            def git_cmd = 'git rev-parse HEAD'
-            def git_proc = git_cmd.execute()
-            attributes 'SCM-Revision': git_proc.text.trim()
-            attributes 'Timestamp': String.valueOf(System.currentTimeMillis())
-            attributes 'Build-Host': InetAddress.localHost.hostName
-        }
+        from sourceSets.main.allSource
+        manifest = defaultManifest()
     }
 
     artifacts {
@@ -69,7 +69,6 @@ subprojects {
             // only necessary for staging/release
 //            beforeDeployment { MavenDeployment deployment -> signPom(deployment) }
 
-            print project.version
             repository(
                     // for snapshots
                     url: "https://oss.sonatype.org/content/repositories/snapshots/"
