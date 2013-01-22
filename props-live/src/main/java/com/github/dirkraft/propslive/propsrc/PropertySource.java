@@ -1,4 +1,4 @@
-package com.github.dirkraft.propslive;
+package com.github.dirkraft.propslive.propsrc;
 
 import java.util.Map;
 import java.util.Properties;
@@ -6,6 +6,8 @@ import java.util.Properties;
 /**
  * Base abstraction of where to read/write properties. About as simple as {@link Properties} or a
  * {@link Map Map&lt;String, String&gt;}
+ *
+ * @author Jason Dunkelberger (dirkraft)
  */
 public interface PropertySource {
     /**
@@ -24,5 +26,5 @@ public interface PropertySource {
      * @param key to put value against
      * @param value to store at the key
      */
-    PropertySource setProp(String key, String value);
+    void setProp(String key, String value);
 }

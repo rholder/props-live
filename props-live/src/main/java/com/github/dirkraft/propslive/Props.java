@@ -4,7 +4,7 @@ package com.github.dirkraft.propslive;
  * Configuration in the style of mapped properties. A great default implementation is available which is based on
  * {@link PropsImpl#PropsImpl() system properties}.
  *
- * @author jason
+ * @author Jason Dunkelberger (dirkraft)
  */
 public interface Props {
 
@@ -43,14 +43,16 @@ public interface Props {
     <E extends Enum<E>> E getEnum(String key, Class<E> enumCls);
     <E extends Enum<E>> E getEnum(String key, E def, Class<E> enumCls);
 
-    void set(String key, Boolean value);
-    void set(String key, Byte value);
-    void set(String key, Short value);
-    void set(String key, Integer value);
-    void set(String key, Long value);
-    void set(String key, Float value);
-    void set(String key, Double value);
-    void set(String key, Character value);
-    void set(String key, String value);
-    <T extends Enum<T>> void set(String key, T value);
+    /* ***** setters must match getters ***** */
+
+    void setBool(String key, Boolean value);
+    void setByte(String key, Byte value);
+    void setShort(String key, Short value);
+    void setInt(String key, Integer value);
+    void setLong(String key, Long value);
+    void setFloat(String key, Float value);
+    void setDouble(String key, Double value);
+    void setCharacter(String key, Character value);
+    void setString(String key, String value);
+    <T extends Enum<T>> void setEnum(String key, T value);
 }

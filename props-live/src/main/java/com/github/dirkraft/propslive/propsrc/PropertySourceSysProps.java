@@ -1,4 +1,4 @@
-package com.github.dirkraft.propslive;
+package com.github.dirkraft.propslive.propsrc;
 
 /**
  * @author Jason Dunkelberger (dirkraft)
@@ -17,8 +17,7 @@ public class PropertySourceSysProps implements PropertySource {
     }
 
     @Override
-    public PropertySource setProp(String key, String value) {
+    public void setProp(String key, String value) {
         System.setProperty(key, value);
-        return this;
     }
 }

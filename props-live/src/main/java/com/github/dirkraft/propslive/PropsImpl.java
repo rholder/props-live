@@ -1,12 +1,14 @@
 package com.github.dirkraft.propslive;
 
+import com.github.dirkraft.propslive.propsrc.PropertySource;
+import com.github.dirkraft.propslive.propsrc.PropertySourceSysProps;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * Implementation of PropConfig which does some basic String manip (trim, blank checkes) before delegating all access
  * to a {@link PropertySource}.
  *
- * @author jason
+ * @author Jason Dunkelberger (dirkraft)
  */
 public class PropsImpl implements Props {
 
@@ -20,7 +22,7 @@ public class PropsImpl implements Props {
     }
 
     /**
-     * @param source accept an arbitrary PropertySource instead of using system properties
+     * @param source accept an arbitrary PropertySource
      */
     public PropsImpl(PropertySource source) {
         this.source = source;
@@ -146,52 +148,52 @@ public class PropsImpl implements Props {
     /* SETTERS */
 
     @Override
-    public <T extends Enum<T>> void set(String key, T value) {
+    public <T extends Enum<T>> void setEnum(String key, T value) {
         source.setProp(key, value.name());
     }
 
     @Override
-    public void set(String key, Boolean value) {
+    public void setBool(String key, Boolean value) {
         source.setProp(key, Boolean.toString(value));
     }
 
     @Override
-    public void set(String key, Byte value) {
+    public void setByte(String key, Byte value) {
         source.setProp(key, Byte.toString(value));
     }
 
     @Override
-    public void set(String key, Short value) {
+    public void setShort(String key, Short value) {
         source.setProp(key, Short.toString(value));
     }
 
     @Override
-    public void set(String key, Integer value) {
+    public void setInt(String key, Integer value) {
         source.setProp(key, Integer.toString(value));
     }
 
     @Override
-    public void set(String key, Long value) {
+    public void setLong(String key, Long value) {
         source.setProp(key, Long.toString(value));
     }
 
     @Override
-    public void set(String key, Float value) {
+    public void setFloat(String key, Float value) {
         source.setProp(key, Float.toString(value));
     }
 
     @Override
-    public void set(String key, Double value) {
+    public void setDouble(String key, Double value) {
         source.setProp(key, Double.toString(value));
     }
 
     @Override
-    public void set(String key, Character value) {
+    public void setCharacter(String key, Character value) {
         source.setProp(key, Character.toString(value));
     }
 
     @Override
-    public void set(String key, String value) {
+    public void setString(String key, String value) {
         source.setProp(key, value);
     }
 

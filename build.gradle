@@ -21,6 +21,10 @@ subprojects {
     group = 'com.github.dirkraft'
 
     configurations {
+        all {
+            resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+        }
+
         // use commons-lang3 only
         all*.exclude group: 'commons-lang', module:'commons-lang', version:'2.6'
     }

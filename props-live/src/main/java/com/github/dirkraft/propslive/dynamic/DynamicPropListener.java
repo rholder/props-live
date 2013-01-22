@@ -1,16 +1,14 @@
 package com.github.dirkraft.propslive.dynamic;
 
-import com.github.dirkraft.propslive.PropsSet;
-
 /**
- * @author jason
+ * @author Jason Dunkelberger (dirkraft)
  */
-public interface DynamicPropsListener<VALUES extends PropsSet> {
+public interface DynamicPropListener<VALUE> {
 
     /**
      * Listener that should be triggered when a subscribed property is set.
      *
      * @param values in configuration that were just set
      */
-    public void reload(VALUES values);
+    public void reload(PropChange<VALUE> values);
 }
