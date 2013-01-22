@@ -93,12 +93,12 @@ public abstract class DefaultingPropSetReader<VALUES> extends PropsSetsImpl {
         }
 
         @Override
-        public String getProp(String key) {
+        public String getString(String key) {
             return get(key);
         }
 
         @Override
-        public void setProp(String key, String value) {
+        public void setString(String key, String value) {
             put(key, value);
         }
     }

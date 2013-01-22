@@ -1,12 +1,39 @@
 package com.github.dirkraft.propslive;
 
+import com.github.dirkraft.propslive.propsrc.PropertySource;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Configuration in the style of mapped properties. A great default implementation is available which is based on
  * {@link PropsImpl#PropsImpl() system properties}.
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public interface Props {
+public interface Props extends PropertySource {
+
+    /**
+     * Collection of java types that are supported by the various getters/setters of this interface:
+     * <ul>
+     *     <li>Boolean</li>
+     *     <li>Byte</li>
+     *     <li>Character</li>
+     *     <li>Double</li>
+     *     <li>Enum</li>
+     *     <li>Float</li>
+     *     <li>Integer</li>
+     *     <li>Long</li>
+     *     <li>Short</li>
+     *     <li>String</li>
+     * </ul>
+     */
+    public static final Set<Class<?>> COVERED_CLASSES = Collections.<Class<?>>unmodifiableSet(new HashSet<>(Arrays.asList(
+            Boolean.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class,
+            Character.class, String.class, Enum.class
+    )));
 
     /**
      * @return a description of the property source behind this PropConfig

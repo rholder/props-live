@@ -42,7 +42,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Boolean getBool(String key, Boolean def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Boolean.valueOf(strval);
     }
 
@@ -53,7 +53,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Byte getByte(String key, Byte def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Byte.valueOf(strval);
     }
 
@@ -64,7 +64,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Short getShort(String key, Short def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Short.valueOf(strval);
     }
 
@@ -75,7 +75,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Integer getInt(String key, Integer def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Integer.valueOf(strval);
     }
 
@@ -86,7 +86,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Long getLong(String key, Long def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Long.valueOf(strval);
     }
 
@@ -97,7 +97,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Float getFloat(String key, Float def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Float.valueOf(strval);
     }
 
@@ -108,7 +108,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Double getDouble(String key, Double def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Double.valueOf(strval);
     }
 
@@ -119,7 +119,7 @@ public class PropsImpl implements Props {
 
     @Override
     public Character getChar(String key, Character def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : strval.charAt(0);
     }
 
@@ -130,7 +130,7 @@ public class PropsImpl implements Props {
 
     @Override
     public String getString(String key, String def) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : strval;
     }
 
@@ -141,7 +141,7 @@ public class PropsImpl implements Props {
 
     @Override
     public <E extends Enum<E>> E getEnum(String key, E def, Class<E> enumCls) {
-        String strval = source.getProp(key);
+        String strval = source.getString(key);
         return StringUtils.isBlank(strval) ? def : Enum.valueOf(enumCls, strval);
     }
 
@@ -149,52 +149,52 @@ public class PropsImpl implements Props {
 
     @Override
     public <T extends Enum<T>> void setEnum(String key, T value) {
-        source.setProp(key, value.name());
+        source.setString(key, value.name());
     }
 
     @Override
     public void setBool(String key, Boolean value) {
-        source.setProp(key, Boolean.toString(value));
+        source.setString(key, Boolean.toString(value));
     }
 
     @Override
     public void setByte(String key, Byte value) {
-        source.setProp(key, Byte.toString(value));
+        source.setString(key, Byte.toString(value));
     }
 
     @Override
     public void setShort(String key, Short value) {
-        source.setProp(key, Short.toString(value));
+        source.setString(key, Short.toString(value));
     }
 
     @Override
     public void setInt(String key, Integer value) {
-        source.setProp(key, Integer.toString(value));
+        source.setString(key, Integer.toString(value));
     }
 
     @Override
     public void setLong(String key, Long value) {
-        source.setProp(key, Long.toString(value));
+        source.setString(key, Long.toString(value));
     }
 
     @Override
     public void setFloat(String key, Float value) {
-        source.setProp(key, Float.toString(value));
+        source.setString(key, Float.toString(value));
     }
 
     @Override
     public void setDouble(String key, Double value) {
-        source.setProp(key, Double.toString(value));
+        source.setString(key, Double.toString(value));
     }
 
     @Override
     public void setCharacter(String key, Character value) {
-        source.setProp(key, Character.toString(value));
+        source.setString(key, Character.toString(value));
     }
 
     @Override
     public void setString(String key, String value) {
-        source.setProp(key, value);
+        source.setString(key, value);
     }
 
 }

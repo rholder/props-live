@@ -11,13 +11,13 @@ public class PropertySourceSysProps implements PropertySource {
     }
 
     @Override
-    public String getProp(String key) {
+    public String getString(String key) {
         return System.getProperty(key);
 
     }
 
     @Override
-    public void setProp(String key, String value) {
+    public void setString(String key, String value) {
         System.setProperty(key, value);
     }
 }
