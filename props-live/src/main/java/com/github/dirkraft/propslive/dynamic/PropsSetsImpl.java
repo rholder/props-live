@@ -28,12 +28,12 @@ class PropsSetsImpl extends PropsImpl implements PropsSets {
     }
 
     @Override
-    public <VALUES> VALUES getPropSet(PropSet<VALUES> propSet) {
+    public <VALUES> VALUES getVals(PropSet<VALUES> propSet) {
         return propSet.getVals(this);
     }
 
     @Override
-    public <VALUES> void setPropSet(PropSet<VALUES> propSet) {
+    public <VALUES> void setVals(PropSet<VALUES> propSet) {
         propSet.setVals(this);
     }
 

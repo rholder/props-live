@@ -23,7 +23,7 @@ interface PropsSets extends Props {
      * @param <VALUES>
      * @return
      */
-    <VALUES> VALUES getPropSet(PropSet<VALUES> propSet);
+    <VALUES> VALUES getVals(PropSet<VALUES> propSet);
 
     /**
      *
@@ -31,7 +31,7 @@ interface PropsSets extends Props {
      * @param propSet
      * @param <VALUES>
      */
-    <VALUES> void setPropSet(PropSet<VALUES> propSet);
+    <VALUES> void setVals(PropSet<VALUES> propSet);
 
     public static Map<String, Method> NON_DEFAULTING_METHODS_BY_NAME = new HashMap<String, Method>(){{
         for (Method method : PropsSets.class.getMethods()) {

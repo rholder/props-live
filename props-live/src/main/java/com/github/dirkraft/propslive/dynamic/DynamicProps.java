@@ -189,12 +189,12 @@ public class DynamicProps implements PropsSets {
         /**
          * Restricts access to {@link DynamicProps#impl} by that set in {@link DynamicProps#propRestrictions}.
          */
-        final Props restrictedProxy = (Props) Proxy.newProxyInstance(getClass().getClassLoader(),
-                new Class<?>[]{Props.class}, new InvocationHandler() {
+        final PropsSets restrictedProxy = new PropsSetsImpl((Props) Proxy.newProxyInstance(getClass().getClassLoader(),
+                new Class<?>[]{PropsSets.class}, new InvocationHandler() {
+
             @Override
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 if (method.getName().startsWith("get") || method.getName().startsWith("set")) {
-                    assert method.getName().matches("(get|set)PropSet");
                     String propKey = (String) args[0];
                     if (!propRestrictions.get().contains(propKey)) {
                         throw new IllegalAccessException("PropSet attempted to access property '" + propKey + "' that " +
@@ -203,7 +203,7 @@ public class DynamicProps implements PropsSets {
                 }
                 return method.invoke(impl, args);
             }
-        });
+        }));
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -221,7 +221,7 @@ public class DynamicProps implements PropsSets {
 
                 PropSetListener<?> propSetListener;
                 if (get || set) {
-                    assert method.getName().matches("(get|set)PropSet");
+                    assert method.getName().matches("(get|set)Vals");
                     // Get or set is fine; whatever. Both can subscribe a listener.
                     if ((propSetListener = setListener.get()) != null) {
                         registerListener(propSet, propSetListener);
@@ -234,14 +234,14 @@ public class DynamicProps implements PropsSets {
                 // exception; concurrent changing of the same property is not supported. Note that in this version,
                 // multiple locks must be acquired for the PropSet get/set to be atomic.
                 if (get) {
-                    assert method.getName().matches("getPropSet");
+                    assert method.getName().matches("getVals");
                     lock = readLock(propSet);
                     lock.lock();
                     lockAcquired = true;
                     ret = method.invoke(restrictedProxy, propSet);
 
                 } else if (set) {
-                    assert method.getName().matches("setPropSet");
+                    assert method.getName().matches("setVals");
                     lock = writeLock(propSet);
                     lockAcquired = lock.tryLock();
 
@@ -331,7 +331,10 @@ public class DynamicProps implements PropsSets {
         private Set<PropSetListener<?>> affectedPropSetListeners(Set<String> changedProps) {
             Set<PropSetListener<?>> affectedListeners = new HashSet<>();
             for (String changedProp : changedProps) {
-                affectedListeners.addAll(propsToSetListeners.get(changedProp));
+                Set<PropSetListener<?>> setListeners = propsToSetListeners.get(changedProp);
+                if (setListeners != null) {
+                    affectedListeners.addAll(setListeners);
+                }
             }
             return affectedListeners;
         }
@@ -590,12 +593,12 @@ public class DynamicProps implements PropsSets {
     }
 
     @Override
-    public <VALUES> VALUES getPropSet(PropSet<VALUES> propSet) {
-        return setProxy.getPropSet(propSet);
+    public <VALUES> VALUES getVals(PropSet<VALUES> propSet) {
+        return setProxy.getVals(propSet);
     }
 
     @Override
-    public <VALUES> void setPropSet(PropSet<VALUES> propSet) {
-        setProxy.setPropSet(propSet);
+    public <VALUES> void setVals(PropSet<VALUES> propSet) {
+        setProxy.setVals(propSet);
     }
 }
