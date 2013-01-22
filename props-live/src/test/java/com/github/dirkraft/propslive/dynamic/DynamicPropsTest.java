@@ -7,7 +7,6 @@ import org.junit.Test;
 import javax.xml.ws.Holder;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -22,7 +21,7 @@ public class DynamicPropsTest {
     final DynamicProps $ = new DynamicProps(new PropertySourceMap(DynamicPropsTest.class.getName()));
 
     Holder<Integer> triggeredReload = new Holder<>(0);
-    DynamicPropListener<Boolean> listener = new DynamicPropListener<Boolean>() {
+    PropListener<Boolean> listener = new PropListener<Boolean>() {
         @Override
         public void reload(PropChange<Boolean> values) {
             ++triggeredReload.value;
@@ -126,7 +125,7 @@ public class DynamicPropsTest {
                             }
                             $.setInt("test.int", j);
                         }
-                    } catch (RuntimeException e) {
+                    } catch (PropLockingException e) {
                         if (e.getMessage().startsWith("Failed to acquire write lock for prop test.int")) {
                             exception.set(true);
                         }
@@ -147,9 +146,9 @@ public class DynamicPropsTest {
         $.setInt("test.int", 0);
 
         final AtomicInteger reloadCount = new AtomicInteger();
-        List<DynamicPropListener<?>> listeners = new ArrayList<>();
+        List<PropListener<?>> listeners = new ArrayList<>();
         for (int i = 0; i < 64; i++) {
-            DynamicPropListener<Integer> listener = new DynamicPropListener<Integer>() {
+            PropListener<Integer> listener = new PropListener<Integer>() {
                 @Override
                 public void reload(PropChange<Integer> values) {
                     reloadCount.getAndIncrement();

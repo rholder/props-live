@@ -1,10 +1,10 @@
 package com.github.dirkraft.propslive.dynamic;
 
-import com.github.dirkraft.propslive.PropSetKeys;
 import com.github.dirkraft.propslive.Props;
-import com.github.dirkraft.propslive.PropsSets;
-import com.github.dirkraft.propslive.PropsSetsImpl;
+import com.github.dirkraft.propslive.PropsImpl;
 import com.github.dirkraft.propslive.propsrc.PropertySource;
+import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
+import com.github.dirkraft.propslive.util.ComboLock;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -21,30 +23,54 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Provides atomic configuration operations per {@link Props} which this class implements. as well as enables
- * {@link DynamicPropListener}s to subscribe to change events of certain properties.
- * <p/>
- * Subscribe a listener by use of chaining in the {@link #to(DynamicPropListener)} method. e.g.
- * <code>
+ * {@link PropListener}s to subscribe to change events of certain properties.
+ *
+ * <hr/>
+ *
+ * Subscribe a listener by use of chaining in the {@link #to(PropListener)} method. e.g.
+ *
+ * <pre>
  * dynamicProperties.to(myListener).getString("project.whatever.propkey")
- * </code>
+ * </pre>
+ *
  * Then when anything anywhere calls a setter on the same DynamicProperties instance that alters the property value
  * "project.whatever.propkey", 'myListener' will be notified of the change through the registered
- * {@link DynamicPropListener#reload(PropChange)}.
+ * {@link PropListener#reload(PropChange)}. Many different listeners can be registered this way.
+ * <p/>
+ * Note that chaining on a set has potential to <strong>immediately</strong> trigger a reload, e.g.
+ * <pre>
+ * dynamicProperties.to(myListener).setString("project.whatever.propkey", "red_theme")
+ * </pre>
+ * if "red_theme" is different that the prior value will trigger reload on 'myListener'.
+ *
+ * <hr/>
+ *
+ * Concurrent writing of the same property will result in a {@link PropLockingException} at this time. Thoughts:
+ * <ul>
+ *     <li>intersecting prop sets being written concurrently (currently might cause PropLockingException)</li>
+ *     <li>intersecting prop sets, intersection resolution: merge? ensure non-overlapping updates (sequential queue)</li>
+ *     <li>queue prop updates so that overlap cannot occur</li>
+ *     <li>queue prop set updates so that even if singular updates are coming in, prop sets will not be able to contend
+ *         with each other</li>
+ * </ul>
+ * If so much of the above massive scope creep ever becomes supported, this could become a lot more than just a dynamic
+ * configuration framework. Thoughts...
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public class DynamicProps implements Props {
+public class DynamicProps implements PropsSets {
 
     private static Logger logger = LoggerFactory.getLogger(DynamicProps.class);
 
     /**
-     * Set by {@link #to(DynamicPropListener)} and ready by {@link #proxy}
+     * Set by {@link #to(PropListener)} and ready by {@link #proxy}
      */
-    private static final ThreadLocal<DynamicPropListener<?>> listener = new ThreadLocal<>();
+    private static final ThreadLocal<PropListener<?>> listener = new ThreadLocal<>();
 
-    private final ConcurrentHashMap<String, ReadWriteLock> propLocks = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Set<DynamicPropListener<?>>> propsToListeners = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, PropSetKeys> propsToPropSets = new ConcurrentHashMap<>();
+    /** Keys are actually String prop keys or {@link PropSet}s */
+    private final ConcurrentHashMap<Object, ReadWriteLock> propLocks = new ConcurrentHashMap<>();
+    /** Keys are actually String prop keys or {@link PropSet}s */
+    private final ConcurrentHashMap<Object, Set<PropListener<?>>> propsToListeners = new ConcurrentHashMap<>();
 
     /**
      * As a field, instead of having DynamicProps extend PropsSetsImpl, so that I can make sure that no methods are
@@ -54,13 +80,17 @@ public class DynamicProps implements Props {
     private final PropsSets impl;
 
     /**
-     * All prop accesses go through here. All accesses will register the listener in {@link #listener} to the interested
-     * property (String) or {@link PropSetKeys} (as the argument appears in {@link PropsSets} methods)
+     * All {@link Props} accesses go through here. All accesses will register the listener in {@link #listener} to the
+     * interested property (String).
      */
-    private final PropsSets proxy = (PropsSets) Proxy.newProxyInstance(getClass().getClassLoader(),
-            new Class<?>[]{PropsSets.class}, new InvocationHandler() {
+    private final Props proxy = (Props) Proxy.newProxyInstance(getClass().getClassLoader(),
+            new Class<?>[]{Props.class}, new InvocationHandler() {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Lock lock = null;
+            boolean lockAcquired = false;
+
+            Object ret;
 
             try {
                 String propKey = (String) args[0];
@@ -68,50 +98,123 @@ public class DynamicProps implements Props {
                 boolean get = method.getName().startsWith("get");
                 boolean set = method.getName().startsWith("set");
 
-                if (set) {
+                PropListener<?> propListener;
+                // Get or set is fine; whatever. Both can subscribe a listener.
+                if ((get || set) && (propListener = listener.get()) != null) {
+                    registerListener(propKey, propListener);
+                }
+
+                // Effectively block reads if there is currently a write, or causes concurrent writes to throw an
+                // exception; concurrent changing of the same property is not supported.
+                if (get) {
+                    lock = readLock(propKey);
+                    lock.lock();
+                    lockAcquired = true;
+                    ret = method.invoke(impl, args);
+
+                } else if (set) {
+                    lock = writeLock(propKey);
+                    lockAcquired = lock.tryLock();
+
+                    if (!lockAcquired) {
+                        throw new PropLockingException("Failed to acquire write lock for prop " + propKey + " as it " +
+                                "was already locked.");
+                    }
+
                     Method getter = PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
                     Object previous = getter.invoke(impl, propKey);
                     Object newVal = args[1];
                     if (!ObjectUtils.equals(previous, newVal)) {
                         notifyListeners(propKey, previous, newVal);
                     }
-                }
+                    ret = method.invoke(impl, args);
 
-                DynamicPropListener<?> dynamicPropListener;
-                // Get or set is fine; whatever. Both can subscribe a listener.
-                if ((get || set) && (dynamicPropListener = listener.get()) != null) {
-                    registerListener(propKey, dynamicPropListener);
+                } else {
+                    // carry on as usual
+                    ret = method.invoke(impl, args);
                 }
-
-                Lock lock = null;
-                boolean lockAcquired = false;
-                try {
-                    // Effectively block reads if there is currently a write. Also causes concurrent writes to throw an
-                    // exception; concurrent changing of the same property smells like a bug.
-                    if (get) {
-                        lock = readLock(propKey);
-                        lock.lock();
-                        lockAcquired = true;
-                    } else if (set) {
-                        lock = writeLock(propKey);
-                        lockAcquired = lock.tryLock();
-                        if (!lockAcquired) {
-                            throw new RuntimeException("Failed to acquire write lock for prop " + propKey + " as it was " +
-                                    "already locked. This assumes that the cause of concurrent writes to the same property " +
-                                    "is a bug.");
-                        }
-                    }
-                } finally {
-                    if (lockAcquired) {
-                        lock.unlock();
-                    }
-                }
-
-                return method.invoke(impl, args);
 
             } finally {
                 listener.remove(); // reset affected listener
+                if (lockAcquired) {
+                    lock.unlock(); // reset any owned lock
+                }
             }
+
+            return ret;
+        }
+    });
+
+    /**
+     * The {@link PropsSets} version of {@link #proxy}. All PropsSets accesses go through here. All accesses will
+     * register the listener in {@link #listener} to the interested {@link PropSet}.
+     */
+    private final PropsSets setProxy = (PropsSets) Proxy.newProxyInstance(getClass().getClassLoader(),
+            new Class<?>[]{PropsSets.class}, new InvocationHandler() {
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Lock lock = null;
+            boolean lockAcquired = false;
+
+            Object ret;
+
+            try {
+                final PropSet<?> propSet = (PropSet<?>) args[0];
+
+                boolean get = method.getName().startsWith("get");
+                boolean set = method.getName().startsWith("set");
+
+                PropListener<?> propListener;
+                // Get or set is fine; whatever. Both can subscribe a listener.
+                if ((get || set) && (propListener = listener.get()) != null) {
+                    registerListener(propSet, propListener);
+                }
+
+                // Effectively block reads if there is currently a write, or causes concurrent writes to throw an
+                // exception; concurrent changing of the same property is not supported. Note that in this version,
+                // multiple locks must be acquired for the PropSet get/set to be atomic.
+                if (get) {
+                    lock = readLock(propSet);
+                    lock.lock();
+                    lockAcquired = true;
+
+                    // construct view of props containing only those of interest to the prop set
+                    ret = method.invoke(new PropsImpl(new PropertySourceMap() {{
+                        for (String propKey : propSet.propKeys()) {
+                            setProp(propKey, impl.getString(propKey));
+                        }
+                    }}), propSet);
+
+                } else if (set) {
+                    lock = writeLock(propSet);
+                    lockAcquired = lock.tryLock();
+
+                    if (!lockAcquired) {
+                        throw new PropLockingException("Failed to acquire write lock for prop set " + propSet + " as " +
+                                "it was already locked.");
+                    }
+
+                    Method getter = PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
+                    Object previousVals = getter.invoke(impl, propSet);
+                    ret = method.invoke(impl, propSet);
+                    Object newVals = getter.invoke(impl, propSet);
+                    if (!ObjectUtils.equals(previousVals, newVals)) {
+                        notifyListeners(propSet, previousVals, newVals);
+                    }
+
+                } else {
+                    // carry on as usual
+                    ret = method.invoke(impl, args);
+                }
+
+            } finally {
+                listener.remove();
+                if (lockAcquired) {
+                    lock.unlock();
+                }
+            }
+
+            return ret;
         }
     });
 
@@ -135,15 +238,11 @@ public class DynamicProps implements Props {
      * @param dynPropsListener who should register as a listener on the following property, e.g.
      *                         <code>dynamicProperties.to(myListener).get("flag.enabled")</code> will be registered
      *                         as a listener of "flag.enabled"
-     * @return a proxy of {@link PropsSets} that will register a {@link DynamicPropListener} against the next
-     *         property access (get or set) through the proxy. Note that this will only work ONCE, against "the next
-     *         property access" and so should always be chained as the example in the 'dynPropsListener' parameter
-     *         documentation.
+     * @return this for chaining
      */
-    @SuppressWarnings("unchecked")
-    public PropsSets to(final DynamicPropListener<?> dynPropsListener) {
+    public PropsSets to(final PropListener<?> dynPropsListener) {
         listener.set(dynPropsListener);
-        return proxy;
+        return this;
     }
 
     private Lock readLock(String propKey) {
@@ -163,21 +262,51 @@ public class DynamicProps implements Props {
         return lock;
     }
 
-    private void registerListener(String propKey, DynamicPropListener<?> listener) {
-        Set<DynamicPropListener<?>> listenerSet = propsToListeners.get(propKey);
+    private Lock readLock(PropSet<?> propSet) {
+        return getLock(propSet).readLock();
+    }
+
+    private Lock writeLock(PropSet<?> propSet) {
+        return getLock(propSet).writeLock();
+    }
+
+    private ReadWriteLock getLock(PropSet<?> propSet) {
+        ReadWriteLock lock = propLocks.get(propSet);
+        if (lock == null) {
+            assert lock instanceof ComboLock;
+
+            // A ComboLock is made up of a bunch of individual property ReadWriteLocks
+            List<ReadWriteLock> readWriteLocks = new ArrayList<>(propSet.propKeys().size());
+            for (String propKey : propSet.propKeys()) {
+                readWriteLocks.add(getLock(propKey));
+            }
+
+            propLocks.putIfAbsent(propSet, new ComboLock(readWriteLocks));
+            lock = propLocks.get(propSet);
+        }
+        return lock;
+    }
+
+    private void registerListener(Object propKeyOrSet, PropListener<?> listener) {
+        Set<PropListener<?>> listenerSet = propsToListeners.get(propKeyOrSet);
         if (listenerSet == null) {
-            propsToListeners.putIfAbsent(propKey, Collections.newSetFromMap(new ConcurrentHashMap<DynamicPropListener<?>, Boolean>()));
-            listenerSet = propsToListeners.get(propKey);
+            propsToListeners.putIfAbsent(propKeyOrSet, Collections.newSetFromMap(new ConcurrentHashMap<PropListener<?>, Boolean>()));
+            listenerSet = propsToListeners.get(propKeyOrSet);
         }
         listenerSet.add(listener);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void notifyListeners(String propKey, T before, T after) {
-        Set<DynamicPropListener<?>> dynamicPropListeners = propsToListeners.get(propKey);
-        if (dynamicPropListeners != null) {
-            for (DynamicPropListener<?> dynamicPropListener : dynamicPropListeners) {
-                ((DynamicPropListener<T>) dynamicPropListener).reload(new PropChange<>(before, after));
+    private <T> void notifyListeners(Object propKeyOrSet, T before, T after) {
+        Set<PropListener<?>> propListeners = propsToListeners.get(propKeyOrSet);
+        if (propListeners != null) {
+            for (PropListener<?> propListener : propListeners) {
+                PropChange<T> propChange = new PropChange<>(before, after);
+                try {
+                    ((PropListener<T>) propListener).reload(propChange);
+                } catch (Throwable t) {
+                    logger.error("Exception reloading listener " + propListener + " with change " + propChange, t);
+                }
             }
         }
     }
@@ -337,6 +466,16 @@ public class DynamicProps implements Props {
     @Override
     public <T extends Enum<T>> void setEnum(String key, T value) {
         proxy.setEnum(key, value);
+    }
+
+    @Override
+    public <VALUES> VALUES getPropSet(PropSet<VALUES> propSet) {
+        return setProxy.getPropSet(propSet);
+    }
+
+    @Override
+    public <VALUES> void setPropSet(PropSet<VALUES> propSet) {
+        setProxy.setPropSet(propSet);
     }
 
 }

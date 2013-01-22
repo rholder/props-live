@@ -1,0 +1,40 @@
+package com.github.dirkraft.propslive.dynamic;
+
+import com.github.dirkraft.propslive.PropsImpl;
+import com.github.dirkraft.propslive.propsrc.PropertySource;
+
+/**
+ * Impl of {@link PropsSets}, a component of {@link DynamicProps} for atomically reading or writing sets of related
+ * properties.
+ *
+ * @author Jason Dunkelberger (dirkraft)
+ */
+class PropsSetsImpl extends PropsImpl implements PropsSets {
+
+    /**
+     * Backed by that of {@link PropsImpl#PropsImpl()}
+     */
+    public PropsSetsImpl() {
+        super();
+    }
+
+    /**
+     * Backed by arbitrary PropertySource
+     *
+     * @param source of props
+     */
+    public PropsSetsImpl(PropertySource source) {
+        super(source);
+    }
+
+    @Override
+    public <VALUES> VALUES getPropSet(PropSet<VALUES> propSet) {
+        return propSet.getVals(this);
+    }
+
+    @Override
+    public <VALUES> void setPropSet(PropSet<VALUES> propSet) {
+        propSet.setVals(this);
+    }
+
+}

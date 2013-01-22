@@ -1,7 +1,5 @@
 package com.github.dirkraft.propslive.dynamic;
 
-import com.github.dirkraft.propslive.PropSetKeys;
-import com.github.dirkraft.propslive.PropsSetsImpl;
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.propsrc.PropertySource;
 
@@ -24,7 +22,7 @@ import java.util.HashMap;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public abstract class DefaultingPropSetReader<VALUES extends PropSetKeys> extends PropsSetsImpl {
+public abstract class DefaultingPropSetReader<VALUES> extends PropsSetsImpl {
 
     /**
      * @param propertySourceDescription basis of the custom populated properties that will go into this instance

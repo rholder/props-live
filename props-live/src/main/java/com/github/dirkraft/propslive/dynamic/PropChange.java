@@ -1,5 +1,7 @@
 package com.github.dirkraft.propslive.dynamic;
 
+import org.apache.commons.lang3.builder.*;
+
 /**
  * @author Jason Dunkelberger (dirkraft)
  */
@@ -19,5 +21,13 @@ public class PropChange<VALUE> {
 
     public VALUE now() {
         return now;
+    }
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this).
+                append("old", old).
+                append("now", now).
+                toString();
     }
 }
