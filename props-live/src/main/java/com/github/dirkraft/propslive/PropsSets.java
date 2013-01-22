@@ -22,9 +22,11 @@ public interface PropsSets extends Props {
      */
     <VALUES extends PropSetKeys> VALUES get(DefaultingPropSetReader<VALUES> propSetReader);
 
-    public static Map<String, Method> METHODS_BY_NAME = new HashMap<String, Method>(){{
+    public static Map<String, Method> NON_DEFAULTING_METHODS_BY_NAME = new HashMap<String, Method>(){{
         for (Method method : PropsSets.class.getMethods()) {
-            put(method.getName(), method);
+            if (method.getParameterTypes().length == 1) {
+                put(method.getName(), method);
+            }
         }
     }};
 }

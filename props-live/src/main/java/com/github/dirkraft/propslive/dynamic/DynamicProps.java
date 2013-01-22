@@ -1,10 +1,10 @@
 package com.github.dirkraft.propslive.dynamic;
 
 import com.github.dirkraft.propslive.PropSetKeys;
-import com.github.dirkraft.propslive.propsrc.PropertySource;
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.PropsSets;
 import com.github.dirkraft.propslive.PropsSetsImpl;
+import com.github.dirkraft.propslive.propsrc.PropertySource;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -63,7 +62,6 @@ public class DynamicProps implements Props {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-            Lock lock = null;
             try {
                 String propKey = (String) args[0];
 
@@ -71,7 +69,7 @@ public class DynamicProps implements Props {
                 boolean set = method.getName().startsWith("set");
 
                 if (set) {
-                    Method getter = PropsSets.METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
+                    Method getter = PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
                     Object previous = getter.invoke(impl, propKey);
                     Object newVal = args[1];
                     if (!ObjectUtils.equals(previous, newVal)) {
@@ -85,18 +83,27 @@ public class DynamicProps implements Props {
                     registerListener(propKey, dynamicPropListener);
                 }
 
-                // Effectively block reads if there is currently a write. Also causes concurrent writes to throw an
-                // exception; concurrent changing of the same property smells like a bug.
-                if (get) {
-                    lock = readLock(propKey);
-                    lock.lock();
-                } else if (set) {
-                    lock = writeLock(propKey);
-                    boolean acquired = lock.tryLock();
-                    if (!acquired) {
-                        throw new RuntimeException("Failed to acquire write lock for prop " + propKey + " as it was " +
-                                "already locked. This assumes that the cause of concurrent writes to the same property " +
-                                "is a bug.");
+                Lock lock = null;
+                boolean lockAcquired = false;
+                try {
+                    // Effectively block reads if there is currently a write. Also causes concurrent writes to throw an
+                    // exception; concurrent changing of the same property smells like a bug.
+                    if (get) {
+                        lock = readLock(propKey);
+                        lock.lock();
+                        lockAcquired = true;
+                    } else if (set) {
+                        lock = writeLock(propKey);
+                        lockAcquired = lock.tryLock();
+                        if (!lockAcquired) {
+                            throw new RuntimeException("Failed to acquire write lock for prop " + propKey + " as it was " +
+                                    "already locked. This assumes that the cause of concurrent writes to the same property " +
+                                    "is a bug.");
+                        }
+                    }
+                } finally {
+                    if (lockAcquired) {
+                        lock.unlock();
                     }
                 }
 
@@ -104,9 +111,6 @@ public class DynamicProps implements Props {
 
             } finally {
                 listener.remove(); // reset affected listener
-                if (lock != null) {
-                    lock.unlock();
-                }
             }
         }
     });
