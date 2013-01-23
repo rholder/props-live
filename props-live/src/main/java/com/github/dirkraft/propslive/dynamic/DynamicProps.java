@@ -1,11 +1,11 @@
 package com.github.dirkraft.propslive.dynamic;
 
 import com.github.dirkraft.propslive.Props;
+import com.github.dirkraft.propslive.PropsImpl;
 import com.github.dirkraft.propslive.dynamic.listen.PropChange;
 import com.github.dirkraft.propslive.dynamic.listen.PropListener;
 import com.github.dirkraft.propslive.propsrc.PropertySource;
 import com.github.dirkraft.propslive.set.PropsSets;
-import com.github.dirkraft.propslive.set.PropsSetsImpl;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public class DynamicProps implements Props {
+public class DynamicProps<IMPL extends Props> implements Props {
 
     private static Logger logger = LoggerFactory.getLogger(DynamicProps.class);
 
@@ -78,7 +78,7 @@ public class DynamicProps implements Props {
      * correctly overridden. If DynamicProps extend PropsSetsImpl, it's possible to miss overriding a method to
      * delegate to the proxy.
      */
-    protected final Props impl;
+    protected final IMPL impl;
 
     /**
      * All {@link Props} accesses go through here. All accesses will register the listener in {@link #listener} to the
@@ -164,19 +164,24 @@ public class DynamicProps implements Props {
     });
 
     /**
-     * Backed by that of {@link PropsSetsImpl#PropsSetsImpl()}
+     * Backed by that of {@link PropsImpl#PropsImpl()}
      */
+    @SuppressWarnings("unchecked")
     public DynamicProps() {
-        impl = new PropsSetsImpl();
+        // Cast is necessary because self generic typing is not supported by any java compiler that I know of. The
+        // 'correct' way would be to break out an additional AbstractDynamicProps<IMPL extends Props>. But a
+        // 6-character cast seems better for now.
+        this.impl = (IMPL) new PropsImpl();
     }
 
     /**
-     * Backed by arbitrary PropertySource
+     * Backed by arbitrary {@link PropertySource}
      *
      * @param source of props
      */
+    @SuppressWarnings("unchecked")
     public DynamicProps(PropertySource source) {
-        impl = new PropsSetsImpl(source);
+        this.impl = (IMPL) new PropsImpl(source);
     }
 
     /**

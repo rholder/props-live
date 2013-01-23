@@ -2,7 +2,10 @@ package com.github.dirkraft.propslive.dynamic;
 
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
+import com.github.dirkraft.propslive.set.IllegalPropertyAccessException;
 import com.github.dirkraft.propslive.set.PropSet;
+import com.github.dirkraft.propslive.set.PropsSets;
+import com.github.dirkraft.propslive.set.PropsSetsImpl;
 import junit.framework.Assert;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -14,9 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Jason Dunkelberger (dirkraft)
  */
-public class DynamicPropsSetsTests {
+public class PropsSetsTests {
 
-    DynamicPropsSets $ = new DynamicPropsSets(new PropertySourceMap(DynamicPropsSetsTests.class.getName()));
+    PropsSets $ = new PropsSetsImpl(new PropertySourceMap(PropsSetsTests.class.getName()));
 
     @Test
     public void testPropSets() {
@@ -85,7 +88,92 @@ public class DynamicPropsSetsTests {
         Assert.assertEquals("c", vals.getLeft());
         Assert.assertEquals("d", vals.getRight());
 
-//        $.setVals(); TODO jason
+        ab.leftVal = "A";
+        ab.rightVal = "B";
+        $.setVals(ab);
+
+        vals = $.getVals(ab);
+        Assert.assertEquals("A", vals.getLeft());
+        Assert.assertEquals("B", vals.getRight());
+        vals = $.getVals(cd);
+        Assert.assertEquals("c", vals.getLeft());
+        Assert.assertEquals("d", vals.getRight());
+
+        cd.leftVal = "C";
+        cd.rightVal = "D";
+        $.setVals(cd);
+
+        vals = $.getVals(ab);
+        Assert.assertEquals("A", vals.getLeft());
+        Assert.assertEquals("B", vals.getRight());
+        vals = $.getVals(cd);
+        Assert.assertEquals("C", vals.getLeft());
+        Assert.assertEquals("D", vals.getRight());
+    }
+
+    @Test
+    public void testIntersectingPropSets() {
+        $.setString("test.a", "a");
+        $.setString("test.b", "b");
+        $.setString("test.c", "c");
+
+        PairPropSet ab = new PairPropSet("test.a", "test.b");
+        PairPropSet bc = new PairPropSet("test.b", "test.c");
+
+        Pair<String, String> vals = $.getVals(ab);
+        Assert.assertEquals("a", vals.getLeft());
+        Assert.assertEquals("b", vals.getRight());
+        vals = $.getVals(bc);
+        Assert.assertEquals("b", vals.getLeft());
+        Assert.assertEquals("c", vals.getRight());
+
+        ab.leftVal = "A";
+        ab.rightVal = "B";
+        $.setVals(ab);
+
+        vals = $.getVals(ab);
+        Assert.assertEquals("A", vals.getLeft());
+        Assert.assertEquals("B", vals.getRight());
+        vals = $.getVals(bc);
+        Assert.assertEquals("B", vals.getLeft());
+        Assert.assertEquals("c", vals.getRight());
+
+        bc.leftVal = "aieeeeee";
+        bc.rightVal = "C";
+        $.setVals(bc);
+
+        vals = $.getVals(ab);
+        Assert.assertEquals("A", vals.getLeft());
+        Assert.assertEquals("aieeeeee", vals.getRight());
+        vals = $.getVals(bc);
+        Assert.assertEquals("aieeeeee", vals.getLeft());
+        Assert.assertEquals("C", vals.getRight());
+    }
+
+    @Test
+    public void testIllegalPropAccess() {
+        BadAccessPropSet badAccessPropSet = new BadAccessPropSet();
+        try {
+            $.getVals(badAccessPropSet);
+            Assert.fail("Expected IllegalPropertyAccessException");
+        } catch (IllegalPropertyAccessException e) {
+            // good
+        }
+
+        try {
+            $.setVals(badAccessPropSet);
+            Assert.fail("Expected IllegalPropertyAccessException");
+        } catch (IllegalPropertyAccessException e) {
+            // good
+        }
+
+        BadImplPropSet badImplPropSet = new BadImplPropSet();
+        try {
+            $.getVals(badImplPropSet);
+            Assert.fail("Expected IllegalPropertyAccessException");
+        } catch (IllegalPropertyAccessException e) {
+            // good
+        }
     }
 }
 
@@ -122,7 +210,7 @@ class GoodTestPropSet implements PropSet<GoodTestPropSetVals> {
 /**
  * This impl attempts to access properties not declared in its {@link #propKeys()}
  */
-class BadTestPropSet implements PropSet<Object> {
+class BadAccessPropSet implements PropSet<Object> {
 
     @Override
     public LinkedHashSet<String> propKeys() {
@@ -143,12 +231,36 @@ class BadTestPropSet implements PropSet<Object> {
     }
 }
 
+class BadImplPropSet implements PropSet<Object> {
+
+    @Override
+    public LinkedHashSet<String> propKeys() {
+        return new LinkedHashSet<>(Arrays.asList("test.prop"));
+    }
+
+    @Override
+    public Object getVals(Props props) {
+        // *snicker* "I will hax all your props in the getter!" - This should result in an exception.
+        props.setString("test.prop", "database://full.of.sql.injections");
+        return null;
+    }
+
+    @Override
+    public void setVals(Props props) {
+        // both gets and sets are allowed here
+    }
+}
+
 class PairPropSet implements PropSet<Pair<String, String>> {
 
+    /** prop key of the left value of the pair */
     final String leftKey;
+    /** prop key of the right value of the pair */
     final String rightKey;
 
+    /** when {@link #setVals(Props)}, set this val for the {@link #leftKey} */
     String leftVal;
+    /** when {@link #setVals(Props)}, set this val for the {@link #rightKey} */
     String rightVal;
 
     PairPropSet(String leftKey, String rightKey) {
@@ -168,7 +280,7 @@ class PairPropSet implements PropSet<Pair<String, String>> {
 
     @Override
     public void setVals(Props props) {
-        props.setString("test.leftKey", leftVal);
-        props.setString("test.rightKey", rightVal);
+        props.setString(leftKey, leftVal);
+        props.setString(rightKey, rightVal);
     }
 }

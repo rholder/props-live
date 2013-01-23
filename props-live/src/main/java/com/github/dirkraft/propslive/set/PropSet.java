@@ -21,7 +21,8 @@ public interface PropSet<VALUES> {
     LinkedHashSet<String> propKeys();
 
     /**
-     * Accesses the given props atomically.
+     * Accesses the given props atomically. Do not attempt to call any setters on 'props'. This is not allowed by
+     * {@link PropsSets#getVals(PropSet)}
      *
      * @param props to read values from. Only keys specified by {@link #propKeys()} will be available in this view. The
      *              props read here cannot be changed while reading

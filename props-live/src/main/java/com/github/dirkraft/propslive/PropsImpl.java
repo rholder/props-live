@@ -12,6 +12,10 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class PropsImpl implements Props {
 
+    public static Props make() {
+        return new PropsImpl();
+    }
+
     protected final PropertySource source;
 
     /**

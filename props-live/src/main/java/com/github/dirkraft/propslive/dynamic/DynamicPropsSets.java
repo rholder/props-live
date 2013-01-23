@@ -30,23 +30,18 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
- * Extension of {@link DynamicProps} with support for methods of the {@link PropsSets} interface, that is, support for
+ * Extension of {@link DynamicProps} with support for methods of the {@link com.github.dirkraft.propslive.set.PropsSets} interface, that is, support for
  * atomically getting and setting sets of properties, and also subscribing to changes on any of the constituent props
  * of some {@link PropSet}.
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public class DynamicPropsSets extends DynamicProps implements PropsSets {
+public class DynamicPropsSets extends DynamicProps<PropsSets> implements com.github.dirkraft.propslive.set.PropsSets {
 
     /**
      * Set by {@link #to(PropSetListener)} and read by {@link #setProxy}
      */
     static final ThreadLocal<PropSetListener<?>> setListener = new ThreadLocal<>();
-    /**
-     * For {@link PropsSets} method access to properties to restrict them to only those they declare in their
-     * {@link PropSet#propKeys()}.
-     */
-    static final ThreadLocal<Set<String>> propRestrictions = new ThreadLocal<>();
 
     /** Keys are {@link PropSet}s */
     private final ConcurrentHashMap<PropSet<?>, ComboLock> propSetLocks = new ConcurrentHashMap<>();
@@ -57,30 +52,11 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
     private final ConcurrentHashMap<String, Set<PropSetListener<?>>> propsToSetListeners = new ConcurrentHashMap<>();
 
     /**
-     * The {@link PropsSets} version of {@link #proxy}. All PropsSets accesses go through here. All accesses will
+     * The {@link com.github.dirkraft.propslive.set.PropsSets} version of {@link #proxy}. All PropsSets accesses go through here. All accesses will
      * register the listener in {@link #listener} to the interested {@link PropSet}.
      */
-    private final PropsSets setProxy = (PropsSets) Proxy.newProxyInstance(getClass().getClassLoader(),
-            new Class<?>[]{PropsSets.class}, new InvocationHandler() {
-
-        /**
-         * Restricts access to {@link DynamicProps#impl} by that set in {@link DynamicPropsSets#propRestrictions}.
-         */
-        final PropsSets restrictedProxy = new PropsSetsImpl((Props) Proxy.newProxyInstance(getClass().getClassLoader(),
-                new Class<?>[]{PropsSets.class}, new InvocationHandler() {
-
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if (method.getName().startsWith("get") || method.getName().startsWith("set")) {
-                    String propKey = (String) args[0];
-                    if (!DynamicPropsSets.propRestrictions.get().contains(propKey)) {
-                        throw new IllegalAccessException("PropSet attempted to access property '" + propKey + "' that " +
-                                "was not in its declared PropSet.propKeys(): " + DynamicPropsSets.propRestrictions.get());
-                    }
-                }
-                return method.invoke(impl, args);
-            }
-        }));
+    private final com.github.dirkraft.propslive.set.PropsSets setProxy = (com.github.dirkraft.propslive.set.PropsSets) Proxy.newProxyInstance(getClass().getClassLoader(),
+            new Class<?>[]{com.github.dirkraft.propslive.set.PropsSets.class}, new InvocationHandler() {
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
@@ -103,8 +79,6 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
                     if ((propSetListener = DynamicPropsSets.setListener.get()) != null) {
                         registerListener(propSet, propSetListener);
                     }
-                    // Restrict property access to the PropSet to those declared by its PropSet.propKeys()
-                    DynamicPropsSets.propRestrictions.set(propSet.propKeys());
                 }
 
                 // Effectively block reads if there is currently a write, or causes concurrent writes to throw an
@@ -115,7 +89,7 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
                     lock = readLock(propSet);
                     lock.lock();
                     lockAcquired = true;
-                    ret = method.invoke(restrictedProxy, propSet);
+                    ret = method.invoke(impl, propSet);
 
                 } else if (set) {
                     assert method.getName().matches("setVals");
@@ -129,7 +103,7 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
 
                     Map<String, String> beforeVals = propVals(propSet.propKeys());
                     // (atomically) does the property updates as dictated by the PropSet impl
-                    ret = method.invoke(restrictedProxy, propSet);
+                    ret = method.invoke(impl, propSet);
                     Map<String, String> afterVals = propVals(propSet.propKeys());
                     Map<String, PropChange<?>> changedProps = changedProps(beforeVals, afterVals);
 
@@ -146,7 +120,7 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
                     ));
                     Props afterView = impl; // The current state of properties is the after view.
 
-                    Method propsSets_getPropSet = PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
+                    Method propsSets_getPropSet = com.github.dirkraft.propslive.set.PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
                     for (PropSetListener<?> affectedPropSetListener : affectedPropSetListeners(changedProps.keySet())) {
                         Object beforePojo = propsSets_getPropSet.invoke(beforeView, affectedPropSetListener.propSet());
                         Object afterPojo = propsSets_getPropSet.invoke(afterView, affectedPropSetListener.propSet());
@@ -160,7 +134,6 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
 
             } finally {
                 DynamicPropsSets.setListener.remove();
-                DynamicPropsSets.propRestrictions.remove();
                 if (lockAcquired) {
                     lock.unlock();
                 }
@@ -228,10 +201,11 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
     });
 
     public DynamicPropsSets() {
+        super(new PropsSetsImpl());
     }
 
     public DynamicPropsSets(PropertySource source) {
-        super(source);
+        super(new PropsSetsImpl(source));
     }
 
     /**
@@ -239,7 +213,7 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
      *                        ({@link PropSetListener#propSet()} {@link PropSet#propKeys()})
      * @return this for chaining
      */
-    public PropsSets to(final PropSetListener<?> propSetListener) {
+    public com.github.dirkraft.propslive.set.PropsSets to(final PropSetListener<?> propSetListener) {
         DynamicPropsSets.setListener.set(propSetListener);
         return this;
     }
@@ -265,7 +239,7 @@ public class DynamicPropsSets extends DynamicProps implements PropsSets {
     }
 
     @Override
-    public <VALUES> void setVals(PropSet<VALUES> propSet) {
+    public void setVals(PropSet<?> propSet) {
         setProxy.setVals(propSet);
     }
 
