@@ -1,6 +1,7 @@
-package com.github.dirkraft.propslive.dynamic;
+package com.github.dirkraft.propslive.set;
 
 import com.github.dirkraft.propslive.Props;
+import com.github.dirkraft.propslive.dynamic.DynamicProps;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -14,7 +15,7 @@ import java.util.Map;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-interface PropsSets extends Props {
+public interface PropsSets extends Props {
 
     /**
      * Get a set of related properties which when

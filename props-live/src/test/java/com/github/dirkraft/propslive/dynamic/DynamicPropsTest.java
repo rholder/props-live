@@ -1,5 +1,6 @@
 package com.github.dirkraft.propslive.dynamic;
 
+import com.github.dirkraft.propslive.dynamic.listen.PropChange;
 import com.github.dirkraft.propslive.dynamic.listen.PropListener;
 import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
 import junit.framework.Assert;

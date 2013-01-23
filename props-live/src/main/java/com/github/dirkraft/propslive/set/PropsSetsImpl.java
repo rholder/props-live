@@ -1,6 +1,7 @@
-package com.github.dirkraft.propslive.dynamic;
+package com.github.dirkraft.propslive.set;
 
 import com.github.dirkraft.propslive.PropsImpl;
+import com.github.dirkraft.propslive.dynamic.DynamicProps;
 import com.github.dirkraft.propslive.propsrc.PropertySource;
 
 /**
@@ -9,7 +10,7 @@ import com.github.dirkraft.propslive.propsrc.PropertySource;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-class PropsSetsImpl extends PropsImpl implements PropsSets {
+public class PropsSetsImpl extends PropsImpl implements PropsSets {
 
     /**
      * Backed by that of {@link PropsImpl#PropsImpl()}

@@ -1,4 +1,4 @@
-package com.github.dirkraft.propslive.dynamic;
+package com.github.dirkraft.propslive.set;
 
 import com.github.dirkraft.propslive.Props;
 

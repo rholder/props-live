@@ -1,4 +1,4 @@
-package com.github.dirkraft.propslive.dynamic;
+package com.github.dirkraft.propslive.dynamic.listen;
 
 import org.apache.commons.lang3.builder.*;
 

@@ -2,7 +2,9 @@ package com.github.dirkraft.propslive.dynamic;
 
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
+import com.github.dirkraft.propslive.set.PropSet;
 import junit.framework.Assert;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -12,9 +14,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Jason Dunkelberger (dirkraft)
  */
-public class DynamicProps_PropSetTests {
+public class DynamicPropsSetsTests {
 
-    DynamicProps $ = new DynamicProps(new PropertySourceMap(DynamicProps_PropSetTests.class.getName()));
+    DynamicPropsSets $ = new DynamicPropsSets(new PropertySourceMap(DynamicPropsSetsTests.class.getName()));
 
     @Test
     public void testPropSets() {
@@ -66,6 +68,25 @@ public class DynamicProps_PropSetTests {
         Assert.assertEquals(75, propSetVals.i.intValue());
     }
 
+    @Test
+    public void testDisjointPropSets() {
+        $.setString("test.a", "a");
+        $.setString("test.b", "b");
+        $.setString("test.c", "c");
+        $.setString("test.d", "d");
+
+        PairPropSet ab = new PairPropSet("test.a", "test.b");
+        PairPropSet cd = new PairPropSet("test.c", "test.d");
+
+        Pair<String, String> vals = $.getVals(ab);
+        Assert.assertEquals("a", vals.getLeft());
+        Assert.assertEquals("b", vals.getRight());
+        vals = $.getVals(cd);
+        Assert.assertEquals("c", vals.getLeft());
+        Assert.assertEquals("d", vals.getRight());
+
+//        $.setVals(); TODO jason
+    }
 }
 
 class GoodTestPropSetVals {
@@ -119,5 +140,35 @@ class BadTestPropSet implements PropSet<Object> {
     public void setVals(Props props) {
         props.setString("test.prop", "okay");
         props.setString("something.else", "should cause exception"); // should except
+    }
+}
+
+class PairPropSet implements PropSet<Pair<String, String>> {
+
+    final String leftKey;
+    final String rightKey;
+
+    String leftVal;
+    String rightVal;
+
+    PairPropSet(String leftKey, String rightKey) {
+        this.leftKey = leftKey;
+        this.rightKey = rightKey;
+    }
+
+    @Override
+    public LinkedHashSet<String> propKeys() {
+        return new LinkedHashSet<>(Arrays.asList(leftKey, rightKey));
+    }
+
+    @Override
+    public Pair<String, String> getVals(Props props) {
+        return Pair.of(props.getString(leftKey), props.getString(rightKey));
+    }
+
+    @Override
+    public void setVals(Props props) {
+        props.setString("test.leftKey", leftVal);
+        props.setString("test.rightKey", rightVal);
     }
 }

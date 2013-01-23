@@ -1,8 +1,7 @@
 package com.github.dirkraft.propslive.dynamic.listen;
 
 import com.github.dirkraft.propslive.dynamic.DynamicProps;
-import com.github.dirkraft.propslive.dynamic.PropChange;
-import com.github.dirkraft.propslive.dynamic.PropSet;
+import com.github.dirkraft.propslive.set.PropSet;
 
 /**
  * Pass an implementation to {@link DynamicProps#to(PropListener)} to register it against the following 'get'.

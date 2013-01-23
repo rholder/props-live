@@ -1,10 +1,11 @@
 package com.github.dirkraft.propslive.dynamic.listen;
 
-import com.github.dirkraft.propslive.dynamic.PropChange;
-import com.github.dirkraft.propslive.dynamic.PropSet;
+import com.github.dirkraft.propslive.set.PropSet;
+import com.github.dirkraft.propslive.set.PropsSets;
 
 /**
- * Corollary to {@link PropListener} which provides a corresponding change listener interface for {@link PropSet}s
+ * Extension of {@link PropListener} which provides a corresponding change listener interface for {@link PropSet}s for
+ * use with {@link PropsSets} property collections.
  *
  * @param <VALUES> corresponding pojo of type-safe values to the PropSet impl returned by {@link #propSet()}
  * @author Jason Dunkelberger (dirkraft)
