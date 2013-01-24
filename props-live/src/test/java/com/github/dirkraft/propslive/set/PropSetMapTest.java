@@ -1,6 +1,7 @@
 package com.github.dirkraft.propslive.set;
 
-import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
+import com.github.dirkraft.propslive.propsrc.PropSourceMap;
+import com.github.dirkraft.propslive.set.ease.PropSetAsMap;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -11,8 +12,8 @@ import java.util.Map;
  */
 public class PropSetMapTest {
 
-    PropsSetsImpl impl = new PropsSetsImpl(new PropertySourceMap(getClass().getName()));
-    PropSetMap propSet = new PropSetMap("test.one", "test.two", "test.three");
+    PropsSetsImpl impl = new PropsSetsImpl(new PropSourceMap(getClass().getName()));
+    PropSetAsMap propSet = new PropSetAsMap("test.one", "test.two", "test.three");
 
     @Test
     public void testGet() {
@@ -70,7 +71,7 @@ public class PropSetMapTest {
         Assert.assertNull(vals.get("test.two"));
         Assert.assertNull(vals.get("test.three"));
 
-        propSet.withWrites("1", PropSetMap.SKIP_WRITE, "3");
+        propSet.withWrites("1", PropSetAsMap.SKIP_WRITE, "3");
         impl.setVals(propSet);
 
         vals = impl.getVals(propSet.withDefaults("defaulted", "defaulted", "defaulted"));

@@ -4,8 +4,9 @@ import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.PropsImpl;
 import com.github.dirkraft.propslive.dynamic.listen.PropChange;
 import com.github.dirkraft.propslive.dynamic.listen.PropListener;
-import com.github.dirkraft.propslive.propsrc.PropertySource;
+import com.github.dirkraft.propslive.propsrc.PropSource;
 import com.github.dirkraft.propslive.set.PropsSets;
+import com.github.dirkraft.propslive.set.PropsSetsImpl;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -169,19 +170,23 @@ public class DynamicProps<IMPL extends Props> implements Props {
     @SuppressWarnings("unchecked")
     public DynamicProps() {
         // Cast is necessary because self generic typing is not supported by any java compiler that I know of. The
-        // 'correct' way would be to break out an additional AbstractDynamicProps<IMPL extends Props>. But a
-        // 6-character cast seems better for now.
-        this.impl = (IMPL) new PropsImpl();
+        // 'correct' way would be to break out an additional AbstractDynamicProps<IMPL extends Props>. But that has
+        // other implications, and a 6-character cast seems the better choice.
+        this((IMPL) new PropsSetsImpl());
     }
 
     /**
-     * Backed by arbitrary {@link PropertySource}
+     * Backed by arbitrary {@link PropSource}
      *
      * @param source of props
      */
     @SuppressWarnings("unchecked")
-    public DynamicProps(PropertySource source) {
-        this.impl = (IMPL) new PropsImpl(source);
+    public DynamicProps(PropSource source) {
+        this((IMPL) new PropsImpl(source));
+    }
+
+    public DynamicProps(IMPL impl) {
+        this.impl = impl;
     }
 
     /**

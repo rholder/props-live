@@ -3,14 +3,13 @@ package com.github.dirkraft.propslive.set;
 import com.github.dirkraft.propslive.Props;
 
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Interface for type-safe logic that will read and write sets of related properties. Such 'sets' gain atomic semantics
  * through { com.github.dirkraft.propslive.dynamic.DynamicProps}.
  *
  * @param <VALUES> the pojo that encapsulates the corresponding value set in a type-safe way.
- *                 <strong>{@link Object#equals(Object)} MUST be implemented correctly on this type</strong> or else
- *                 superfluous property change events may be triggered.
  * @author Jason Dunkelberger (dirkraft)
  */
 public interface PropSet<VALUES> {
@@ -18,7 +17,7 @@ public interface PropSet<VALUES> {
     /**
      * @return the set of prop keys that comprise the interest of this PropSet
      */
-    LinkedHashSet<String> propKeys();
+    Set<String> propKeys();
 
     /**
      * Accesses the given props atomically. Do not attempt to call any setters on 'props'. This is not allowed by

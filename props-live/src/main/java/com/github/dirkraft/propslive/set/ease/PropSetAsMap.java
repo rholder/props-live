@@ -1,16 +1,18 @@
-package com.github.dirkraft.propslive.set;
+package com.github.dirkraft.propslive.set.ease;
 
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.dynamic.DynamicPropsSets;
+import com.github.dirkraft.propslive.set.PropSet;
 import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Abstract impl of {@link PropSet} with conveniences like that of a map where all values are in the form of
@@ -49,7 +51,7 @@ import java.util.Map;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public class PropSetMap implements PropSet<Map<String, String>> {
+public class PropSetAsMap implements PropSet<Map<String, String>> {
 
     /**
      * Special value token that can be passed to {@link #withWrites(String...)} that will skip writing that property
@@ -63,14 +65,14 @@ public class PropSetMap implements PropSet<Map<String, String>> {
     /**
      * @param propKeys to register to {@link #propKeys()}
      */
-    public PropSetMap(String... propKeys) {
+    public PropSetAsMap(String... propKeys) {
         this(Arrays.asList(propKeys));
     }
 
     /**
      * @param propKeys to register to {@link #propKeys()}
      */
-    public PropSetMap(List<String> propKeys) {
+    public PropSetAsMap(List<String> propKeys) {
         this.propDefaults = new ArrayList<>(propKeys.size());
         this.propWrites = new ArrayList<>(propKeys.size());
         for (String propKey : propKeys) {
@@ -82,13 +84,13 @@ public class PropSetMap implements PropSet<Map<String, String>> {
     /**
      * Sets default values to use when doing {@link #getVals(Props)}.
      * <p/>
-     * See {@link PropSetMap} for example chaining usage.
+     * See {@link PropSetAsMap} for example chaining usage.
      *
      * @param defaultVals corresponding to constructor order of default values
      * @return this for chaining
      * @throws RuntimeException if params length does not match that of {@link #propKeys()}
      */
-    public PropSetMap withDefaults(String... defaultVals) throws RuntimeException {
+    public PropSetAsMap withDefaults(String... defaultVals) throws RuntimeException {
         stageVals(this.propDefaults, defaultVals);
         return this;
     }
@@ -97,13 +99,13 @@ public class PropSetMap implements PropSet<Map<String, String>> {
      * Prepares values that should be written when doing {@link #setVals(Props)}. Use {@link #SKIP_WRITE} to skip
      * writing anything to some property (whereas specifying <code>null</code> would explicitly null out that property).
      * <p/>
-     * See {@link PropSetMap} for example chaining usage
+     * See {@link PropSetAsMap} for example chaining usage
      *
      * @param vals corresponding to constructor order of values to set
      * @return this for chaining
      * @throws RuntimeException if params length does not match that of {@link #propKeys()}
      */
-    public PropSetMap withWrites(String... vals) throws RuntimeException {
+    public PropSetAsMap withWrites(String... vals) throws RuntimeException {
         stageVals(this.propWrites, vals);
         return this;
     }
@@ -119,8 +121,8 @@ public class PropSetMap implements PropSet<Map<String, String>> {
     }
 
     @Override
-    public LinkedHashSet<String> propKeys() {
-        LinkedHashSet<String> propKeys = new LinkedHashSet<>();
+    public Set<String> propKeys() {
+        Set<String> propKeys = new HashSet<>(propDefaults.size());
         for (Pair<String, String> propDefault : propDefaults) {
             propKeys.add(propDefault.getKey());
         }
@@ -154,5 +156,4 @@ public class PropSetMap implements PropSet<Map<String, String>> {
             }
         }
     }
-
 }

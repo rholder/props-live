@@ -1,8 +1,8 @@
-package com.github.dirkraft.propslive.view;
+package com.github.dirkraft.propslive.propsrc.view;
 
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.PropsImpl;
-import com.github.dirkraft.propslive.propsrc.PropertySource;
+import com.github.dirkraft.propslive.propsrc.PropSource;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
@@ -15,21 +15,21 @@ import java.util.List;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public class LayeredPropertySource implements PropertySource {
+public class LayeredPropSource implements PropSource {
 
-    private final List<PropertySource> propertySources;
+    private final List<PropSource> propertySources;
 
     /**
      * @param propertySources in order of decreasing precedence (iteration order)
      */
-    public LayeredPropertySource(PropertySource... propertySources) {
+    public LayeredPropSource(PropSource... propertySources) {
         this(Arrays.asList(propertySources));
     }
 
     /**
      * @param propertySources in order of decreasing precedence (iteration order)
      */
-    public LayeredPropertySource(List<PropertySource> propertySources) {
+    public LayeredPropSource(List<PropSource> propertySources) {
         this.propertySources = propertySources;
     }
 
@@ -39,14 +39,14 @@ public class LayeredPropertySource implements PropertySource {
     }
 
     /**
-     * Iterates through the {@link PropertySource}s given via the constructor until a value that satisfies
+     * Iterates through the {@link PropSource}s given via the constructor until a value that satisfies
      * {@link #isSet(String)} is found. If no such value satisfies the condition, returns <code>null</code>
      *
      * @return first satisfying value, or otherwise null
      */
     @Override
     public String getString(String propKey) {
-        Iterator<PropertySource> it = propertySources.iterator();
+        Iterator<PropSource> it = propertySources.iterator();
         String propVal = null;
         while (it.hasNext() && !isSet(propVal = it.next().getString(propKey))) ;
         return propVal;

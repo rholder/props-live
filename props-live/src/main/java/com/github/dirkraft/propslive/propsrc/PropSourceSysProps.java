@@ -3,7 +3,7 @@ package com.github.dirkraft.propslive.propsrc;
 /**
  * @author Jason Dunkelberger (dirkraft)
  */
-public class PropertySourceSysProps implements PropertySource {
+public class PropSourceSysProps implements PropSource {
 
     @Override
     public String description() {

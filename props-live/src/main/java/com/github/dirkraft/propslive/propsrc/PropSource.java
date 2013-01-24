@@ -10,7 +10,8 @@ import java.util.Properties;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public interface PropertySource {
+public interface PropSource {
+
     /**
      * @return description to help identify this property source, e.g. system properties, config.properties file, ...
      */

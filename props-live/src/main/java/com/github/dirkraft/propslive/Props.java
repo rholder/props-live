@@ -1,6 +1,6 @@
 package com.github.dirkraft.propslive;
 
-import com.github.dirkraft.propslive.propsrc.PropertySource;
+import com.github.dirkraft.propslive.propsrc.PropSource;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,7 +13,7 @@ import java.util.Set;
  *
  * @author Jason Dunkelberger (dirkraft)
  */
-public interface Props extends PropertySource {
+public interface Props extends PropSource {
 
     /**
      * Collection of java types that are supported by the various getters/setters of this interface:

@@ -2,7 +2,7 @@ package com.github.dirkraft.propslive.dynamic;
 
 import com.github.dirkraft.propslive.dynamic.listen.PropChange;
 import com.github.dirkraft.propslive.dynamic.listen.PropListener;
-import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
+import com.github.dirkraft.propslive.propsrc.PropSourceMap;
 import junit.framework.Assert;
 import org.junit.Test;
 
@@ -18,12 +18,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author Jason Dunkelberger (dirkraft)
  */
-public class DynamicPropsTest {
+public class DynamicPropsTest<TEST_TARGET extends DynamicProps<?>> {
 
-    final DynamicProps $ = new DynamicProps(new PropertySourceMap(DynamicPropsTest.class.getName()));
+    final TEST_TARGET $;
 
-    Holder<Integer> triggeredReload = new Holder<>(0);
-    PropListener<Boolean> listener = new PropListener<Boolean>() {
+    public DynamicPropsTest() {
+        this(new DynamicProps(new PropSourceMap(DynamicPropsTest.class.getName())));
+    }
+
+    @SuppressWarnings("unchecked")
+    protected DynamicPropsTest(DynamicProps dynamicProps) {
+        this.$ = (TEST_TARGET) dynamicProps;
+    }
+
+    private Holder<Integer> triggeredReload = new Holder<>(0);
+    private PropListener<Boolean> listener = new PropListener<Boolean>() {
         @Override
         public void reload(PropChange<Boolean> values) {
             ++triggeredReload.value;

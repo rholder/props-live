@@ -1,34 +1,30 @@
 package com.github.dirkraft.propslive;
 
-import com.github.dirkraft.propslive.propsrc.PropertySource;
-import com.github.dirkraft.propslive.propsrc.PropertySourceSysProps;
+import com.github.dirkraft.propslive.propsrc.PropSource;
+import com.github.dirkraft.propslive.propsrc.PropSourceSysProps;
 import org.apache.commons.lang3.StringUtils;
 
 /**
  * Implementation of PropConfig which does some basic String manip (trim, blank checkes) before delegating all access
- * to a {@link PropertySource}.
+ * to a {@link PropSource}.
  *
  * @author Jason Dunkelberger (dirkraft)
  */
 public class PropsImpl implements Props {
 
-    public static Props make() {
-        return new PropsImpl();
-    }
-
-    protected final PropertySource source;
+    protected final PropSource source;
 
     /**
      * Defaults the {@link #source} to system properties.
      */
     public PropsImpl() {
-        source = new PropertySourceSysProps();
+        source = new PropSourceSysProps();
     }
 
     /**
      * @param source accept an arbitrary PropertySource
      */
-    public PropsImpl(PropertySource source) {
+    public PropsImpl(PropSource source) {
         this.source = source;
     }
 

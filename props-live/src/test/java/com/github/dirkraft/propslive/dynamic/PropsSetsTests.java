@@ -1,7 +1,8 @@
 package com.github.dirkraft.propslive.dynamic;
 
 import com.github.dirkraft.propslive.Props;
-import com.github.dirkraft.propslive.propsrc.PropertySourceMap;
+import com.github.dirkraft.propslive.propsrc.PropSourceMap;
+import com.github.dirkraft.propslive.set.ease.PropSetAsPair;
 import com.github.dirkraft.propslive.set.IllegalPropertyAccessException;
 import com.github.dirkraft.propslive.set.PropSet;
 import com.github.dirkraft.propslive.set.PropsSets;
@@ -11,7 +12,9 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -19,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class PropsSetsTests {
 
-    PropsSets $ = new PropsSetsImpl(new PropertySourceMap(PropsSetsTests.class.getName()));
+    PropsSets $ = new PropsSetsImpl(new PropSourceMap(PropsSetsTests.class.getName()));
 
     @Test
     public void testPropSets() {
@@ -27,8 +30,8 @@ public class PropsSetsTests {
 
         PropSet<Integer> singleIntPropSet = new PropSet<Integer>() {
             @Override
-            public LinkedHashSet<String> propKeys() {
-                return new LinkedHashSet<>(Arrays.asList("test.key"));
+            public Set<String> propKeys() {
+                return new HashSet<>(Arrays.asList("test.key"));
             }
 
             @Override
@@ -78,8 +81,8 @@ public class PropsSetsTests {
         $.setString("test.c", "c");
         $.setString("test.d", "d");
 
-        PairPropSet ab = new PairPropSet("test.a", "test.b");
-        PairPropSet cd = new PairPropSet("test.c", "test.d");
+        PropSetAsPair ab = new PropSetAsPair("test.a", "test.b");
+        PropSetAsPair cd = new PropSetAsPair("test.c", "test.d");
 
         Pair<String, String> vals = $.getVals(ab);
         Assert.assertEquals("a", vals.getLeft());
@@ -117,8 +120,8 @@ public class PropsSetsTests {
         $.setString("test.b", "b");
         $.setString("test.c", "c");
 
-        PairPropSet ab = new PairPropSet("test.a", "test.b");
-        PairPropSet bc = new PairPropSet("test.b", "test.c");
+        PropSetAsPair ab = new PropSetAsPair("test.a", "test.b");
+        PropSetAsPair bc = new PropSetAsPair("test.b", "test.c");
 
         Pair<String, String> vals = $.getVals(ab);
         Assert.assertEquals("a", vals.getLeft());
@@ -186,7 +189,7 @@ class GoodTestPropSetVals {
 class GoodTestPropSet implements PropSet<GoodTestPropSetVals> {
 
     @Override
-    public LinkedHashSet<String> propKeys() {
+    public Set<String> propKeys() {
         return new LinkedHashSet<>(Arrays.asList("test.s", "test.t", "test.i"));
     }
 
@@ -213,7 +216,7 @@ class GoodTestPropSet implements PropSet<GoodTestPropSetVals> {
 class BadAccessPropSet implements PropSet<Object> {
 
     @Override
-    public LinkedHashSet<String> propKeys() {
+    public Set<String> propKeys() {
         return new LinkedHashSet<>(Arrays.asList("test.prop"));
     }
 
@@ -234,7 +237,7 @@ class BadAccessPropSet implements PropSet<Object> {
 class BadImplPropSet implements PropSet<Object> {
 
     @Override
-    public LinkedHashSet<String> propKeys() {
+    public Set<String> propKeys() {
         return new LinkedHashSet<>(Arrays.asList("test.prop"));
     }
 
@@ -251,36 +254,3 @@ class BadImplPropSet implements PropSet<Object> {
     }
 }
 
-class PairPropSet implements PropSet<Pair<String, String>> {
-
-    /** prop key of the left value of the pair */
-    final String leftKey;
-    /** prop key of the right value of the pair */
-    final String rightKey;
-
-    /** when {@link #setVals(Props)}, set this val for the {@link #leftKey} */
-    String leftVal;
-    /** when {@link #setVals(Props)}, set this val for the {@link #rightKey} */
-    String rightVal;
-
-    PairPropSet(String leftKey, String rightKey) {
-        this.leftKey = leftKey;
-        this.rightKey = rightKey;
-    }
-
-    @Override
-    public LinkedHashSet<String> propKeys() {
-        return new LinkedHashSet<>(Arrays.asList(leftKey, rightKey));
-    }
-
-    @Override
-    public Pair<String, String> getVals(Props props) {
-        return Pair.of(props.getString(leftKey), props.getString(rightKey));
-    }
-
-    @Override
-    public void setVals(Props props) {
-        props.setString(leftKey, leftVal);
-        props.setString(rightKey, rightVal);
-    }
-}

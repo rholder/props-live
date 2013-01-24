@@ -4,26 +4,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * {@link PropSource} backed by an arbitrary Map
+ *
  * @author Jason Dunkelberger (dirkraft)
  */
-public class PropertySourceMap implements PropertySource {
+public class PropSourceMap implements PropSource {
 
     private final String description;
     private final Map<String, String> props;
 
-    public PropertySourceMap() {
+    public PropSourceMap() {
         this("map property source");
     }
 
-    public PropertySourceMap(String description) {
+    public PropSourceMap(String description) {
         this(description, new HashMap<String, String>());
     }
 
-    public PropertySourceMap(Map<String, String> props) {
+    public PropSourceMap(Map<String, String> props) {
         this("map property source", props);
     }
 
-    public PropertySourceMap(String description, Map<String, String> props) {
+    public PropSourceMap(String description, Map<String, String> props) {
         this.description = description;
         this.props = props;
     }
