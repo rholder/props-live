@@ -65,14 +65,14 @@ public class DynamicProps<IMPL extends Props> implements Props {
     /**
      * Set by {@link #to(PropListener)} and read by {@link #proxy}
      */
-    private static final ThreadLocal<PropListener<?>> listener = new ThreadLocal<>();
+    protected static final ThreadLocal<PropListener<?>> listener = new ThreadLocal<>();
 
     /** Keys are String prop keys */
     private final ConcurrentHashMap<String, ReadWriteLock> propLocks = new ConcurrentHashMap<>();
     /**
      * Keys are String prop keys.
      */
-    private final ConcurrentHashMap<String, Set<PropListener<?>>> propsToSingleListeners = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, Set<PropListener<?>>> propsToSingleListeners = new ConcurrentHashMap<>();
 
     /**
      * As a field, instead of having DynamicProps extend PropsSetsImpl, so that I can make sure that no methods are
@@ -153,15 +153,6 @@ public class DynamicProps<IMPL extends Props> implements Props {
         private Lock writeLock(String propKey) {
             return getLock(propKey).writeLock();
         }
-
-        private void registerListener(String propKey, PropListener<?> listener) {
-            Set<PropListener<?>> listenerSet = propsToSingleListeners.get(propKey);
-            if (listenerSet == null) {
-                propsToSingleListeners.putIfAbsent(propKey, Collections.newSetFromMap(new ConcurrentHashMap<PropListener<?>, Boolean>()));
-                listenerSet = propsToSingleListeners.get(propKey);
-            }
-            listenerSet.add(listener);
-        }
     });
 
     /**
@@ -207,6 +198,15 @@ public class DynamicProps<IMPL extends Props> implements Props {
             lock = propLocks.get(propKey);
         }
         return lock;
+    }
+
+    protected void registerListener(String propKey, PropListener<?> listener) {
+        Set<PropListener<?>> listenerSet = propsToSingleListeners.get(propKey);
+        if (listenerSet == null) {
+            propsToSingleListeners.putIfAbsent(propKey, Collections.newSetFromMap(new ConcurrentHashMap<PropListener<?>, Boolean>()));
+            listenerSet = propsToSingleListeners.get(propKey);
+        }
+        listenerSet.add(listener);
     }
 
     @SuppressWarnings("unchecked")

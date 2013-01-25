@@ -107,12 +107,7 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                     Map<String, String> afterVals = propVals(propSet.propKeys());
                     Map<String, PropChange<?>> changedProps = changedProps(beforeVals, afterVals);
 
-                    // First, trigger single prop listeners
-                    for (Map.Entry<String, PropChange<?>> changedPropEntry : changedProps.entrySet()) {
-                        notifyListeners(changedPropEntry.getKey(), changedPropEntry.getValue());
-                    }
-
-                    // Second, trigger all PropSet's that contain any changed prop. They each expect a particular
+                    // First, trigger all PropSet's that contain any changed prop. They each expect a particular
                     // arbitrary pojo constructed and returned by their PropSet.getVals(Props). So in order to get a
                     // PropChange<POJO>, we need the before and after values of all the properties for each POJO.
                     Props beforeView = new PropsSetsImpl(new LayeredPropSource(
@@ -121,10 +116,18 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                     Props afterView = impl; // The current state of properties is the after view.
 
                     Method propsSets_getPropSet = PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
-                    for (PropSetListener<?> affectedPropSetListener : affectedPropSetListeners(changedProps.keySet())) {
+                    Set<PropSetListener<?>> affectedPropSetListeners = affectedPropSetListeners(changedProps.keySet());
+                    for (PropSetListener<?> affectedPropSetListener : affectedPropSetListeners) {
                         Object beforePojo = propsSets_getPropSet.invoke(beforeView, affectedPropSetListener.propSet());
                         Object afterPojo = propsSets_getPropSet.invoke(afterView, affectedPropSetListener.propSet());
                         notifyListener(affectedPropSetListener, new PropChange<>(beforePojo, afterPojo));
+                    }
+
+                    // Second, trigger any remaining single prop listeners. PropSetListeners are also registered with
+                    // DynamicProps#propsToSingleListeners so that singular property changes will fire correctly from
+                    // DynamicProps. So in THIS proxy for getVals/setVals, we need to be sure not to fire PropSetListeners again.
+                    for (Map.Entry<String, PropChange<?>> propChangeEntry : changedProps.entrySet()) {
+                        notifySingleListeners(propChangeEntry.getKey(), propChangeEntry.getValue(), affectedPropSetListeners);
                     }
 
                 } else {
@@ -134,6 +137,9 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
 
             } finally {
                 setListener.remove();
+                // See DynamicPropsSets.to(PropSetListener), which allows the possibility of registering a
+                // PropSetListener to singular prop changes.
+                DynamicProps.listener.remove();
                 if (lockAcquired) {
                     lock.unlock();
                 }
@@ -150,7 +156,37 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                     listenerSet = propsToSetListeners.get(propKey);
                 }
                 listenerSet.add(listener);
+                // also add to singular prop change listeners
+                DynamicPropsSets.super.registerListener(propKey, listener);
             }
+        }
+
+        /**
+         * @param changedPropKey changed property key
+         * @param propChange corresponding value change
+         * @param affectedPropSetListeners these have already been notified, so don't do it again for singular props.
+         */
+        private void notifySingleListeners(String changedPropKey, PropChange<?> propChange, Set<PropSetListener<?>> affectedPropSetListeners) {
+            Set<PropListener<?>> singlePropListeners = propsToSingleListeners.get(changedPropKey);
+            if (singlePropListeners != null) {
+                for (PropListener<?> singlePropListener : singlePropListeners) {
+                    // Presumably PropSetListeners have already been taken care of, so just don't fire those. If this check
+                    // isn't strong enough, consider something with set contains and add.
+                    if (!(singlePropListener instanceof PropSetListener<?>)) {
+                        notifyListener(singlePropListener, propChange);
+                    } else {
+                        assert affectedPropSetListeners.contains(singlePropListener);
+                    }
+                }
+            }
+        }
+
+        /**
+         * purely exists to limit scope of {@literal @}SuppressWarnings("unchecked")
+         */
+        @SuppressWarnings("unchecked")
+        private void notifyListener(PropListener<?> listener, PropChange<?> propChange) {
+            DynamicPropsSets.this.notifyListener((PropListener<Object>) listener, (PropChange<Object>) propChange);
         }
 
         private Map<String, String> propVals(Collection<String> propKeys) {
@@ -184,12 +220,6 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
             return affectedListeners;
         }
 
-        /** Just to specifically locate a @SuppressWarnings("unchecked") */
-        @SuppressWarnings("unchecked")
-        private void notifyListener(PropSetListener<?> propSetListener, PropChange<Object> propChange) {
-            DynamicPropsSets.this.notifyListener((PropListener<Object>) propSetListener, propChange);
-        }
-
         private Lock readLock(PropSet<?> propSet) {
             return getLock(propSet).readLock();
         }
@@ -217,6 +247,7 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
      */
     public PropsSets to(final PropSetListener<?> propSetListener) {
         setListener.set(propSetListener);
+        DynamicProps.listener.set(propSetListener); // Also allow a propset to register listeners on singular props
         return this;
     }
 

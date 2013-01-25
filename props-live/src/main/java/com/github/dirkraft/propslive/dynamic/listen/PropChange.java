@@ -17,7 +17,7 @@ public class PropChange<VALUE> {
 
     public VALUE old() {
         return old;
-    };
+    }
 
     public VALUE now() {
         return now;

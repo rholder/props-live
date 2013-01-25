@@ -60,7 +60,7 @@ public abstract class UberPropSet extends PropSetAsPropSlice implements PropSetL
     }
 
     @Override
-    public PropSet<PropsSlice> propSet() {
+    public UberPropSet propSet() {
         return this;
     }
 }
