@@ -16,7 +16,7 @@ import java.util.Set;
  * Example: I only care about reads, so I don't want an empty {@link PropSet#setVals(Props)} impl cluttering my code.
  * <pre>
  * PropSet&lt;MyValueHolder&gt; myPropSet = new AbstractPropSet&lt;MyValueHolder&gt;("my.prop.url", "my.prop.user", "my.prop.pass") {
- *     {@literal@}Override
+ *    {@literal @}Override
  *     public MyValueHolder getVals(Props props) {
  *         return new MyValueHolder(
  *             props.get("my.prop.url"),
