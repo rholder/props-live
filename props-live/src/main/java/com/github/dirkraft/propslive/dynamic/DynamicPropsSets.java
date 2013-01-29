@@ -59,6 +59,8 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
 
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Lock cloneLock = null;
+
             Lock lock = null;
             boolean lockAcquired = false;
 
@@ -91,6 +93,9 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                     ret = method.invoke(impl, propSet);
 
                 } else if (set) {
+                    cloneLock = DynamicPropsSets.this.cloneLock.readLock();
+                    cloneLock.lock();
+
                     assert method.getName().matches("setVals");
                     lock = writeLock(propSet);
                     lockAcquired = lock.tryLock();
@@ -142,6 +147,9 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                 DynamicProps.listener.remove();
                 if (lockAcquired) {
                     lock.unlock();
+                }
+                if (cloneLock != null) {
+                    cloneLock.unlock();
                 }
             }
 

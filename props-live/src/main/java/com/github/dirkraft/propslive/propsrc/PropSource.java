@@ -29,4 +29,11 @@ public interface PropSource {
      * @param value to store at the key
      */
     void setString(String key, String value);
+
+    /**
+     * Implementations may impose other semantics, see their respective java doc.
+     *
+     * @return this as a Map&lt;String, String&gt;
+     */
+    Map<String, String> asMap();
 }

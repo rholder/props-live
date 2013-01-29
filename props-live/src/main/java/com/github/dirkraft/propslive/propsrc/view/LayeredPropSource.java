@@ -6,8 +6,10 @@ import com.github.dirkraft.propslive.propsrc.PropSource;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Extension of {@link PropsImpl} but can accept an override 'layer' of {@link Props}. Lookups will iterate through
@@ -17,25 +19,25 @@ import java.util.List;
  */
 public class LayeredPropSource implements PropSource {
 
-    private final List<PropSource> propertySources;
+    private final List<PropSource> propSources;
 
     /**
-     * @param propertySources in order of decreasing precedence (iteration order)
+     * @param propSources in order of decreasing precedence (iteration order)
      */
-    public LayeredPropSource(PropSource... propertySources) {
-        this(Arrays.asList(propertySources));
+    public LayeredPropSource(PropSource... propSources) {
+        this(Arrays.asList(propSources));
     }
 
     /**
-     * @param propertySources in order of decreasing precedence (iteration order)
+     * @param propSources in order of decreasing precedence (iteration order)
      */
-    public LayeredPropSource(List<PropSource> propertySources) {
-        this.propertySources = propertySources;
+    public LayeredPropSource(List<PropSource> propSources) {
+        this.propSources = propSources;
     }
 
     @Override
     public String description() {
-        return getClass().getName() + propertySources;
+        return getClass().getName() + propSources;
     }
 
     /**
@@ -46,9 +48,9 @@ public class LayeredPropSource implements PropSource {
      */
     @Override
     public String getString(String propKey) {
-        Iterator<PropSource> it = propertySources.iterator();
+        Iterator<PropSource> it = propSources.iterator();
         String propVal = null;
-        while (it.hasNext() && !isSet(propVal = it.next().getString(propKey))) ;
+        while (it.hasNext() && !isSet(propVal = it.next().getString(propKey)));
         return propVal;
     }
 
@@ -70,5 +72,21 @@ public class LayeredPropSource implements PropSource {
     @Override
     public void setString(String key, String value) {
         throw new UnsupportedOperationException("Changing prop vals on a " + getClass().getName() + " is not possible.");
+    }
+
+    /**
+     * @return A merged view of the underlying property sources with the earliest property sources 'winning' the value
+     *         for contested keys. Changes to this map will not affect any of the original prop sources in this
+     *         LayeredPropSource.
+     */
+    @Override
+    public Map<String, String> asMap() {
+        Map<String, String> map = new HashMap<>();
+        // put values in reverse order so that earlier prop sources will 'win', overwrite later prop sources
+        for (int i = propSources.size() - 1; i >= 0; --i) {
+            PropSource propSource = propSources.get(i);
+            map.putAll(propSource.asMap());
+        }
+        return map;
     }
 }

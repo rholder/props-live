@@ -6,7 +6,6 @@ import com.github.dirkraft.propslive.dynamic.listen.PropChange;
 import com.github.dirkraft.propslive.dynamic.listen.PropListener;
 import com.github.dirkraft.propslive.propsrc.PropSource;
 import com.github.dirkraft.propslive.set.PropsSets;
-import com.github.dirkraft.propslive.set.PropsSetsImpl;
 import org.apache.commons.lang3.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +14,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
@@ -82,6 +82,13 @@ public class DynamicProps<IMPL extends Props> implements Props {
     protected final IMPL impl;
 
     /**
+     * A special lock that can lock down all write interactions with this DynamicProps, particularly for thread-safe
+     * cloning. Unfortunately we don't actually know the complete set of properties in the PropertySource, so we need
+     * an "everything" lock, rather than actually obtaining every individual write lock.
+     */
+    protected final CloneLock cloneLock = new CloneLock();
+
+    /**
      * All {@link Props} accesses go through here. All accesses will register the listener in {@link #listener} to the
      * interested property (String).
      */
@@ -89,8 +96,10 @@ public class DynamicProps<IMPL extends Props> implements Props {
             new Class<?>[]{Props.class}, new InvocationHandler() {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            Lock cloneLock = null;
+
             Lock lock = null;
-            boolean lockAcquired = false;
+            boolean propLockAcquired = false;
 
             Object ret;
 
@@ -111,14 +120,17 @@ public class DynamicProps<IMPL extends Props> implements Props {
                 if (get) {
                     lock = readLock(propKey);
                     lock.lock();
-                    lockAcquired = true;
+                    propLockAcquired = true;
                     ret = method.invoke(impl, args);
 
                 } else if (set) {
-                    lock = writeLock(propKey);
-                    lockAcquired = lock.tryLock();
+                    cloneLock = DynamicProps.this.cloneLock.readLock(); // see javadoc and writeBlockLock
+                    cloneLock.lock();
 
-                    if (!lockAcquired) {
+                    lock = writeLock(propKey);
+                    propLockAcquired = lock.tryLock();
+
+                    if (!propLockAcquired) {
                         throw new PropLockingException("Failed to acquire write lock for prop " + propKey + " as it " +
                                 "was already locked.");
                     }
@@ -138,8 +150,11 @@ public class DynamicProps<IMPL extends Props> implements Props {
 
             } finally {
                 listener.remove(); // reset affected listener
-                if (lockAcquired) {
+                if (propLockAcquired) {
                     lock.unlock(); // reset any owned lock
+                }
+                if (cloneLock != null) {
+                    cloneLock.unlock();
                 }
             }
 
@@ -163,7 +178,7 @@ public class DynamicProps<IMPL extends Props> implements Props {
         // Cast is necessary because self generic typing is not supported by any java compiler that I know of. The
         // 'correct' way would be to break out an additional AbstractDynamicProps<IMPL extends Props>. But that has
         // other implications, and a 6-character cast seems the better choice.
-        this((IMPL) new PropsSetsImpl());
+        this((IMPL) new PropsImpl());
     }
 
     /**
@@ -230,6 +245,26 @@ public class DynamicProps<IMPL extends Props> implements Props {
     @Override
     public String description() {
         return impl.description();
+    }
+
+    /**
+     * @return an unmodifiable view of the underlying prop source's {@link PropSource#asMap()}.<ul>
+     *     <li>default constructor: {@link PropsImpl#asMap()}</li>
+     *     <li>arbitrary PropSource: that of the PropSource's asMap</li>
+     *     <li>arbitrary Props: that of the Props' asMap </li>
+     * </ul>
+     * This should produce an accurate snapshot of all properties at the time of invocation, which requires the use of
+     * a lock that must block all writes for the duration of the clone operation.
+     */
+    @Override
+    public Map<String, String> asMap() {
+        Lock cloneLock = this.cloneLock.writeLock();
+        try {
+            cloneLock.lock();
+            return Collections.unmodifiableMap(impl.asMap());
+        } finally {
+            cloneLock.unlock();
+        }
     }
 
     /* ***** Props interface impl delegates to proxy ***** */
@@ -384,4 +419,25 @@ public class DynamicProps<IMPL extends Props> implements Props {
         proxy.setEnum(key, value);
     }
 
+}
+
+/**
+ * Alias to {@link ReentrantReadWriteLock} to make code more readable, since we're taking advantage of the read/write
+ * locks for not-exactly read/write locking. See {@link DynamicProps#cloneLock}.
+ */
+class CloneLock extends ReentrantReadWriteLock {
+    /**
+     * @return A lock that will lock immediately when no blocking lock has been granted ({@link #blockingLock()})
+     */
+    public ReadLock proceedingLock() {
+        return super.readLock();
+    }
+
+    /**
+     * @return A lock that will lock as soon as all {@link #proceedingLock()}s have been unlocked, and future
+     *         proceedingLocks can be blocked for the duration of the blockingLock.
+     */
+    public WriteLock blockingLock() {
+        return super.writeLock();
+    }
 }

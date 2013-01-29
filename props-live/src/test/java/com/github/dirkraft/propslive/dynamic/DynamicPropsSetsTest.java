@@ -4,14 +4,13 @@ import com.github.dirkraft.propslive.dynamic.listen.PropChange;
 import com.github.dirkraft.propslive.propsrc.PropSourceMap;
 import com.github.dirkraft.propslive.set.IllegalPropertyAccessException;
 import com.github.dirkraft.propslive.set.ease.DelegatingAbstractListeningPropSet;
+import com.github.dirkraft.propslive.core.LivePropSet;
 import com.github.dirkraft.propslive.set.ease.PropSetAsPair;
 import com.github.dirkraft.propslive.set.ease.PropSetAsPropSlice;
 import com.github.dirkraft.propslive.set.ease.PropsSlice;
-import com.github.dirkraft.propslive.set.ease.UberPropSet;
 import junit.framework.Assert;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
-import org.junit.rules.Timeout;
 
 import javax.xml.ws.Holder;
 import java.util.Random;
@@ -95,7 +94,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
     @Test
     public void testPropSetListenersOnPropSetChanges() {
         final Holder<Integer> reloadCountAB = new Holder<>(0);
-        UberPropSet propSetAndListenerAB = new UberPropSet("test.a", "test.b") {
+        LivePropSet propSetAndListenerAB = new LivePropSet("test.a", "test.b") {
             {
                 setString("test.a", "Astring");
                 setString("test.b", "Bstring");
@@ -108,7 +107,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
         };
 
         final Holder<Integer> reloadCountABC = new Holder<>(0);
-        UberPropSet propSetAndListenerABC = new UberPropSet("test.a", "test.b", "test.c") {
+        LivePropSet propSetAndListenerABC = new LivePropSet("test.a", "test.b", "test.c") {
             {
                 setString("test.a", "a-string");
                 setString("test.b", "b-string");
@@ -182,7 +181,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
         Assert.assertEquals(3, reloadCountABC.value.intValue());
 
         final Holder<Integer> reloadCountBCD = new Holder<>(0);
-        UberPropSet propSetAndListenerBCD = new UberPropSet("test.b", "test.c", "test.d") {
+        LivePropSet propSetAndListenerBCD = new LivePropSet("test.b", "test.c", "test.d") {
             {
                 setString("test.b", "B is in the house");
                 setString("test.c", "C is in the house");
@@ -218,12 +217,12 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
 
     @Test(timeout = 30 * 1000) // 30 seconds
     public void testThreadsDisjointWriters() throws InterruptedException {
-        final UberPropSet ab = new UberPropSet("test.a", "test.b") {
+        final LivePropSet ab = new LivePropSet("test.a", "test.b") {
             @Override
             public void reload(PropChange<PropsSlice> values) {
             }
         };
-        final UberPropSet de = new UberPropSet("test.d", "test.e") {
+        final LivePropSet de = new LivePropSet("test.d", "test.e") {
             @Override
             public void reload(PropChange<PropsSlice> values) {
             }
@@ -278,12 +277,12 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
 
     @Test(timeout = 30 * 1000) // 30 seconds
     public void testThreadsOverlappingWritersException() throws InterruptedException {
-        final UberPropSet abc = new UberPropSet("test.a", "test.b", "test.c") {
+        final LivePropSet abc = new LivePropSet("test.a", "test.b", "test.c") {
             @Override
             public void reload(PropChange<PropsSlice> values) {
             }
         };
-        final UberPropSet cde = new UberPropSet("test.c", "test.d", "test.e") {
+        final LivePropSet cde = new LivePropSet("test.c", "test.d", "test.e") {
             @Override
             public void reload(PropChange<PropsSlice> values) {
             }

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,6 +79,22 @@ public class PropSetAsMap implements PropSet<Map<String, String>> {
         for (String propKey : propKeys) {
             this.propDefaults.add(MutablePair.of(propKey, (String) null));
             this.propWrites.add(MutablePair.of(propKey, SKIP_WRITE)); // default to not changing properties
+        }
+    }
+
+    /**
+     * A constructor that prepares this PropSetAsMap based off a map of props. Stages both defaults and writes so that
+     * this instance can be effectively used for either.
+     *
+     * @param props to whose entries will be the {@link #propKeys()} of this prop set, and whose values will be BOTH
+     *              staged defaultVals and staged writes.
+     */
+    public PropSetAsMap(Map<String, String> props) {
+        this.propDefaults = new ArrayList<>(props.size());
+        this.propWrites = new ArrayList<>(props.size());
+        for (Map.Entry<String, String> entry : props.entrySet()) {
+            this.propDefaults.add(MutablePair.of(entry.getKey(), entry.getValue()));
+            this.propWrites.add(MutablePair.of(entry.getKey(), entry.getValue()));
         }
     }
 

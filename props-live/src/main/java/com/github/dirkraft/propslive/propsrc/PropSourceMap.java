@@ -45,5 +45,11 @@ public class PropSourceMap implements PropSource {
         props.put(key, value);
     }
 
-
+    /**
+     * @return the underlying map instance which was passed to the constructor, or the default (just a {@link HashMap})
+     */
+    @Override
+    public Map<String, String> asMap() {
+        return props;
+    }
 }

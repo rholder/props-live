@@ -4,6 +4,8 @@ import com.github.dirkraft.propslive.propsrc.PropSource;
 import com.github.dirkraft.propslive.propsrc.PropSourceSysProps;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Map;
+
 /**
  * Implementation of PropConfig which does some basic String manip (trim, blank checkes) before delegating all access
  * to a {@link PropSource}.
@@ -31,6 +33,15 @@ public class PropsImpl implements Props {
     @Override
     public final String description() {
         return source.description();
+    }
+
+    /**
+     * @return The value of the underlying {@link PropSource}, or that of the default source ({@link PropSourceSysProps#asMap()})
+     *         if none was provided through the constructor.
+     */
+    @Override
+    public Map<String, String> asMap() {
+        return source.asMap();
     }
 
     /* GETTERS */

@@ -6,7 +6,9 @@ import com.github.dirkraft.propslive.set.IllegalPropertyAccessException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -42,15 +44,25 @@ public class RestrictedPropSource implements PropSource {
     }
 
     /**
+     * @return a map of this RestrictedPropSource's prop keys and values. Changes to the returned instance will not
+     *         affect this RestrictedPropSource.
+     */
+    @Override
+    public Map<String, String> asMap() {
+        Map<String, String> map = new HashMap<>(propKeys.size());
+        for (String propKey : propKeys) {
+            map.put(propKey, this.getString(propKey));
+        }
+        return map;
+    }
+
+    /**
      * @throws IllegalPropertyAccessException if key is not in the allowed set
      */
     @Override
     public String getString(String key) throws IllegalPropertyAccessException {
-        if (!propKeys.contains(key)) {
-            throw new IllegalPropertyAccessException(String.format(MSG_EXCEPT_RESTRICTED_FMT, key, propKeys));
-        } else {
-            return delegate.getString(key);
-        }
+        propCheck(key);
+        return delegate.getString(key);
     }
 
     /**
@@ -58,10 +70,13 @@ public class RestrictedPropSource implements PropSource {
      */
     @Override
     public void setString(String key, String value) throws IllegalPropertyAccessException {
+        propCheck(key);
+        delegate.setString(key, value);
+    }
+
+    private void propCheck(String key) throws IllegalPropertyAccessException {
         if (!propKeys.contains(key)) {
             throw new IllegalPropertyAccessException(String.format(MSG_EXCEPT_RESTRICTED_FMT, key, propKeys));
-        } else {
-            delegate.setString(key, value);
         }
     }
 }
