@@ -12,6 +12,8 @@ import com.github.dirkraft.propslive.set.PropsSets;
 import com.github.dirkraft.propslive.set.PropsSetsImpl;
 import com.github.dirkraft.propslive.util.ComboLock;
 import org.apache.commons.lang3.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -36,6 +38,8 @@ import java.util.concurrent.locks.ReadWriteLock;
  * @author Jason Dunkelberger (dirkraft)
  */
 public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSets {
+
+    private static final Logger logger = LoggerFactory.getLogger(DynamicPropsSets.class);
 
     /**
      * Set by {@link #to(PropSetListener)} and read by {@link #setProxy}
@@ -120,11 +124,21 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                     ));
                     Props afterView = impl; // The current state of properties is the after view.
 
+                    // Starting at this point, we are careful to attempt to fire every registered listener once.
+
                     Method propsSets_getPropSet = PropsSets.NON_DEFAULTING_METHODS_BY_NAME.get(method.getName().replaceFirst("^set", "get"));
                     Set<PropSetListener<?>> affectedPropSetListeners = affectedPropSetListeners(changedProps.keySet());
                     for (PropSetListener<?> affectedPropSetListener : affectedPropSetListeners) {
-                        Object beforePojo = propsSets_getPropSet.invoke(beforeView, affectedPropSetListener.propSet());
-                        Object afterPojo = propsSets_getPropSet.invoke(afterView, affectedPropSetListener.propSet());
+                        Object beforePojo = null, afterPojo = null;
+                        try {
+                            beforePojo = propsSets_getPropSet.invoke(beforeView, affectedPropSetListener.propSet());
+                            afterPojo = propsSets_getPropSet.invoke(afterView, affectedPropSetListener.propSet());
+                        } catch (Exception e) {
+                            logger.error("Failed to compute PropChange for listener " + affectedPropSetListener.getClass()
+                                    + " on prop set of " + affectedPropSetListener.propSet().propKeys(), e);
+                        }
+                        // The eventual call to listener.reload is already wrapped in a try-catch, so keep this out
+                        // of the previous try-catch. If an exception escapes from here, it is a library bug.
                         notifyListener(affectedPropSetListener, new PropChange<>(beforePojo, afterPojo));
                     }
 
@@ -132,6 +146,8 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                     // DynamicProps#propsToSingleListeners so that singular property changes will fire correctly from
                     // DynamicProps. So in THIS proxy for getVals/setVals, we need to be sure not to fire PropSetListeners again.
                     for (Map.Entry<String, PropChange<?>> propChangeEntry : changedProps.entrySet()) {
+                        // The eventual call to listener.reload is already wrapped in a try-catch, so don't wrap this
+                        // in a superfluous try-catch. If an exception escapes from here, it is a library bug.
                         notifySingleListeners(propChangeEntry.getKey(), propChangeEntry.getValue(), affectedPropSetListeners);
                     }
 
