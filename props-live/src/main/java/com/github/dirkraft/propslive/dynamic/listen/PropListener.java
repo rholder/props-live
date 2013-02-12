@@ -17,7 +17,7 @@ public interface PropListener<VALUE> {
     /**
      * Listener that should be triggered when a subscribed property is set.
      *
-     * @param values in configuration that were just set
+     * @param propChange in configuration that were just set
      */
-    void reload(PropChange<VALUE> values);
+    void reload(PropChange<VALUE> propChange);
 }

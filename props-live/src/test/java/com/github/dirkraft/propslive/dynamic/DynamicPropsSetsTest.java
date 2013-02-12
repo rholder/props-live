@@ -63,7 +63,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
         ) {
             // PropSetListener impl
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
                 ++reloadCount.value;
             }
         };
@@ -101,7 +101,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
             }
 
             @Override
-            public void reload(PropChange values) {
+            public void reload(PropChange propChange) {
                 ++reloadCountAB.value;
             }
         };
@@ -115,7 +115,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
             }
 
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
                 ++reloadCountABC.value;
             }
         };
@@ -189,7 +189,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
             }
 
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
                 ++reloadCountBCD.value;
             }
         };
@@ -219,12 +219,12 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
     public void testThreadsDisjointWriters() throws InterruptedException {
         final LivePropSet ab = new LivePropSet("test.a", "test.b") {
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
             }
         };
         final LivePropSet de = new LivePropSet("test.d", "test.e") {
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
             }
         };
 
@@ -279,12 +279,12 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
     public void testThreadsOverlappingWritersException() throws InterruptedException {
         final LivePropSet abc = new LivePropSet("test.a", "test.b", "test.c") {
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
             }
         };
         final LivePropSet cde = new LivePropSet("test.c", "test.d", "test.e") {
             @Override
-            public void reload(PropChange<PropsSlice> values) {
+            public void reload(PropChange<PropsSlice> propChange) {
             }
         };
 

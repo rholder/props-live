@@ -21,9 +21,9 @@ public interface PropSetListener<VALUES> extends PropListener<VALUES> {
      * Listener that should be triggered when a subscribed property is set. A PropSetListener is subscribed to changes
      * on every property of its corresponding PropSet (defined by {@link PropSet#propKeys()})
      *
-     * @param values in configuration that were just set
+     * @param propChange in configuration that were just set
      */
     @Override
-    void reload(PropChange<VALUES> values);
+    void reload(PropChange<VALUES> propChange);
 
 }

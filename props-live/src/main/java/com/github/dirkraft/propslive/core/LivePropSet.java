@@ -63,7 +63,7 @@ public class LivePropSet extends PropSetAsPropSlice implements PropSetListener<P
      * Override me to perform something on reload
      */
     @Override
-    public void reload(PropChange<PropsSlice> values) {
+    public void reload(PropChange<PropsSlice> propChange) {
         // do nothing
     }
 }
