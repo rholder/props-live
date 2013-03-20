@@ -1,14 +1,9 @@
-Props Live /prɒps laɪv/
+Props Live /präps līv/
 =======================
-A framework for easing reading and writing properties, with support for subscribing to property change events. Every
-attempt has been made for maximum concurrent reading of properties simultaneous with up to 1 concurrent writer.
+A utility for easing reading and writing properties, with support for subscribing to property change events. Every
+attempt has been made for maximum concurrent reading of properties simultaneous with up to 1 writer.
 
-
-
-Include the Dependency
-----------------------
-
-# Maven
+### Maven
 
     <dependency>
       <groupId>com.github.dirkraft</groupId>
@@ -16,14 +11,24 @@ Include the Dependency
       <version>1.0.0</version>
     </dependency>
 
-# Gradle
+### Gradle
 
     compile 'com.github.dirkraft:props-live:1.0.0'
 
+----
+
+## Usage
+I like to have a singleton or static instance somewhere with a very short name.
+
+    public class MyConfig {
+        public static final PropsLive $ = new PropsLive();
+    }
 
 
-Scenarios For Thought
----------------------
+----
+
+## Supported Scenarios
+
 1. You need to parse all matter of simple types from some property source (e.g. system properties), Strings, Booleans,
    Integers and others.
 
@@ -49,7 +54,7 @@ be picked up by your tooling.
 
 License
 -------
-`props-live` is released under the Apache 2 license: (http://www.apache.org/licenses/LICENSE-2.0)
+`props-live` is released under the [Apache 2 license](http://www.apache.org/licenses/LICENSE-2.0)
 
 
 
@@ -57,5 +62,5 @@ Contributors
 ------------
 
  * Jason Dunkelberger (dirkraft)
- * and you! perhaps...
+ * and so can you
 

@@ -3,8 +3,10 @@ package com.github.dirkraft.propslive.propsrc.view;
 import com.github.dirkraft.propslive.Props;
 import com.github.dirkraft.propslive.PropsImpl;
 import com.github.dirkraft.propslive.propsrc.PropSource;
+import com.github.dirkraft.propslive.propsrc.PropSourceMap;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,6 +21,8 @@ import java.util.Map;
  */
 public class LayeredPropSource implements PropSource {
 
+    /** {@link #setString(String, String)} are not applied to the underlying {@link #propSources} and instead to this. */
+    private final PropSource writeReceivingPropSource;
     private final List<PropSource> propSources;
 
     /**
@@ -32,7 +36,11 @@ public class LayeredPropSource implements PropSource {
      * @param propSources in order of decreasing precedence (iteration order)
      */
     public LayeredPropSource(List<PropSource> propSources) {
-        this.propSources = propSources;
+        writeReceivingPropSource = new PropSourceMap("write-catcher created by " + getClass().getSimpleName());
+        ArrayList<PropSource> prependedPropSources = new ArrayList<>(propSources.size() + 1);
+        prependedPropSources.add(writeReceivingPropSource);
+        prependedPropSources.addAll(propSources);
+        this.propSources = prependedPropSources;
     }
 
     @Override
@@ -71,7 +79,7 @@ public class LayeredPropSource implements PropSource {
 
     @Override
     public void setString(String key, String value) {
-        throw new UnsupportedOperationException("Changing prop vals on a " + getClass().getName() + " is not possible.");
+        writeReceivingPropSource.setString(key, value);
     }
 
     /**
