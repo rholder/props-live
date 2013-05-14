@@ -44,15 +44,15 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
     /**
      * Set by {@link #to(PropSetListener)} and read by {@link #setProxy}
      */
-    private static final ThreadLocal<PropSetListener<?>> setListener = new ThreadLocal<>();
+    private static final ThreadLocal<PropSetListener<?>> setListener = new ThreadLocal<PropSetListener<?>>();
 
     /** Keys are {@link PropSet}s */
-    private final ConcurrentHashMap<PropSet<?>, ComboLock> propSetLocks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<PropSet<?>, ComboLock> propSetLocks = new ConcurrentHashMap<PropSet<?>, ComboLock>();
     /**
      * Keys are String prop keys. Listeners on {@link PropSet}s are registered for every property in
      * {@link PropSet#propKeys()}
      */
-    private final ConcurrentHashMap<String, Set<PropSetListener<?>>> propsToSetListeners = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Set<PropSetListener<?>>> propsToSetListeners = new ConcurrentHashMap<String, Set<PropSetListener<?>>>();
 
     /**
      * The {@link PropsSets} version of {@link #proxy}. All PropsSets accesses go through here. All accesses will
@@ -139,7 +139,7 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
                         }
                         // The eventual call to listener.reload is already wrapped in a try-catch, so keep this out
                         // of the previous try-catch. If an exception escapes from here, it is a library bug.
-                        notifyListener(affectedPropSetListener, new PropChange<>(beforePojo, afterPojo));
+                        notifyListener(affectedPropSetListener, new PropChange<Object>(beforePojo, afterPojo));
                     }
 
                     // Second, trigger any remaining single prop listeners. PropSetListeners are also registered with
@@ -214,7 +214,7 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
         }
 
         private Map<String, String> propVals(Collection<String> propKeys) {
-            Map<String, String> vals = new HashMap<>(propKeys.size());
+            Map<String, String> vals = new HashMap<String, String>(propKeys.size());
             for (String propKey : propKeys) {
                 vals.put(propKey, impl.getString(propKey));
             }
@@ -222,19 +222,19 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
         }
 
         private Map<String, PropChange<?>> changedProps(Map<String, String> before, Map<String, String> after) {
-            Map<String, PropChange<?>> changedProps = new HashMap<>();
+            Map<String, PropChange<?>> changedProps = new HashMap<String, PropChange<?>>();
             for (String propKey : before.keySet()) {
                 Object beforeVal = before.get(propKey);
                 Object afterVal = after.get(propKey);
                 if (!ObjectUtils.equals(beforeVal, afterVal)) {
-                    changedProps.put(propKey, new PropChange<>(beforeVal, afterVal));
+                    changedProps.put(propKey, new PropChange<Object>(beforeVal, afterVal));
                 }
             }
             return changedProps;
         }
 
         private Set<PropSetListener<?>> affectedPropSetListeners(Set<String> changedProps) {
-            Set<PropSetListener<?>> affectedListeners = new HashSet<>();
+            Set<PropSetListener<?>> affectedListeners = new HashSet<PropSetListener<?>>();
             for (String changedProp : changedProps) {
                 Set<PropSetListener<?>> setListeners = propsToSetListeners.get(changedProp);
                 if (setListeners != null) {
@@ -279,7 +279,7 @@ public class DynamicPropsSets extends DynamicProps<PropsSets> implements PropsSe
         ComboLock lock = propSetLocks.get(propSet);
         if (lock == null) {
             // A ComboLock is made up of a bunch of individual property ReadWriteLocks
-            List<ReadWriteLock> readWriteLocks = new ArrayList<>(propSet.propKeys().size());
+            List<ReadWriteLock> readWriteLocks = new ArrayList<ReadWriteLock>(propSet.propKeys().size());
             for (String propKey : propSet.propKeys()) {
                 readWriteLocks.add(super.getLock(propKey));
             }

@@ -74,8 +74,8 @@ public class PropSetAsMap implements PropSet<Map<String, String>> {
      * @param propKeys to register to {@link #propKeys()}
      */
     public PropSetAsMap(List<String> propKeys) {
-        this.propDefaults = new ArrayList<>(propKeys.size());
-        this.propWrites = new ArrayList<>(propKeys.size());
+        this.propDefaults = new ArrayList<Pair<String, String>>(propKeys.size());
+        this.propWrites = new ArrayList<Pair<String, String>>(propKeys.size());
         for (String propKey : propKeys) {
             this.propDefaults.add(MutablePair.of(propKey, (String) null));
             this.propWrites.add(MutablePair.of(propKey, SKIP_WRITE)); // default to not changing properties
@@ -90,8 +90,8 @@ public class PropSetAsMap implements PropSet<Map<String, String>> {
      *              staged defaultVals and staged writes.
      */
     public PropSetAsMap(Map<String, String> props) {
-        this.propDefaults = new ArrayList<>(props.size());
-        this.propWrites = new ArrayList<>(props.size());
+        this.propDefaults = new ArrayList<Pair<String, String>>(props.size());
+        this.propWrites = new ArrayList<Pair<String, String>>(props.size());
         for (Map.Entry<String, String> entry : props.entrySet()) {
             this.propDefaults.add(MutablePair.of(entry.getKey(), entry.getValue()));
             this.propWrites.add(MutablePair.of(entry.getKey(), entry.getValue()));
@@ -139,7 +139,7 @@ public class PropSetAsMap implements PropSet<Map<String, String>> {
 
     @Override
     public Set<String> propKeys() {
-        Set<String> propKeys = new HashSet<>(propDefaults.size());
+        Set<String> propKeys = new HashSet<String>(propDefaults.size());
         for (Pair<String, String> propDefault : propDefaults) {
             propKeys.add(propDefault.getKey());
         }
@@ -152,7 +152,7 @@ public class PropSetAsMap implements PropSet<Map<String, String>> {
      */
     @Override
     public Map<String, String> getVals(Props props) {
-        Map<String, String> vals = new HashMap<>(this.propDefaults.size());
+        Map<String, String> vals = new HashMap<String, String>(this.propDefaults.size());
         for (Pair<String, String> propDefault : this.propDefaults) {
             String propKey = propDefault.getKey();
             vals.put(propKey, props.getString(propKey, propDefault.getValue()));

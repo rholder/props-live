@@ -37,7 +37,7 @@ public class LayeredPropSource implements PropSource {
      */
     public LayeredPropSource(List<PropSource> propSources) {
         writeReceivingPropSource = new PropSourceMap("write-catcher created by " + getClass().getSimpleName());
-        ArrayList<PropSource> prependedPropSources = new ArrayList<>(propSources.size() + 1);
+        ArrayList<PropSource> prependedPropSources = new ArrayList<PropSource>(propSources.size() + 1);
         prependedPropSources.add(writeReceivingPropSource);
         prependedPropSources.addAll(propSources);
         this.propSources = prependedPropSources;
@@ -89,7 +89,7 @@ public class LayeredPropSource implements PropSource {
      */
     @Override
     public Map<String, String> asMap() {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<String, String>();
         // put values in reverse order so that earlier prop sources will 'win', overwrite later prop sources
         for (int i = propSources.size() - 1; i >= 0; --i) {
             PropSource propSource = propSources.get(i);

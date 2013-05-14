@@ -38,7 +38,7 @@ public class AbstractPropSet<VALUES> implements PropSet<VALUES> {
     }
 
     public AbstractPropSet(Collection<String> propKeys) {
-        this(new LinkedHashSet<>(propKeys));
+        this(new LinkedHashSet<String>(propKeys));
     }
 
     public AbstractPropSet(Set<String> propKeys) {

@@ -65,14 +65,14 @@ public class DynamicProps<IMPL extends Props> implements Props {
     /**
      * Set by {@link #to(PropListener)} and read by {@link #proxy}
      */
-    protected static final ThreadLocal<PropListener<?>> listener = new ThreadLocal<>();
+    protected static final ThreadLocal<PropListener<?>> listener = new ThreadLocal<PropListener<?>>();
 
     /** Keys are String prop keys */
-    private final ConcurrentHashMap<String, ReadWriteLock> propLocks = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ReadWriteLock> propLocks = new ConcurrentHashMap<String, ReadWriteLock>();
     /**
      * Keys are String prop keys.
      */
-    protected final ConcurrentHashMap<String, Set<PropListener<?>>> propsToSingleListeners = new ConcurrentHashMap<>();
+    protected final ConcurrentHashMap<String, Set<PropListener<?>>> propsToSingleListeners = new ConcurrentHashMap<String, Set<PropListener<?>>>();
 
     /**
      * As a field, instead of having DynamicProps extend PropsSetsImpl, so that I can make sure that no methods are
@@ -139,7 +139,7 @@ public class DynamicProps<IMPL extends Props> implements Props {
                     Object previous = getter.invoke(impl, propKey);
                     Object newVal = args[1];
                     if (!ObjectUtils.equals(previous, newVal)) {
-                        notifyListeners(propKey, new PropChange<>(previous, newVal));
+                        notifyListeners(propKey, new PropChange<Object>(previous, newVal));
                     }
                     ret = method.invoke(impl, args);
 

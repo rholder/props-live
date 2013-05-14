@@ -59,7 +59,7 @@ public class PropsSlice extends PropsImpl {
      * @param source to clone vals from
      */
     public PropsSlice(final PropSource source, final Collection<String> propKeys) {
-        this(source, new HashSet<>(propKeys));
+        this(source, new HashSet<String>(propKeys));
     }
 
     /**

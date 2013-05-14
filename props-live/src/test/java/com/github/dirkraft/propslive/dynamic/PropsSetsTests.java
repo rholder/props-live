@@ -31,7 +31,7 @@ public class PropsSetsTests {
         PropSet<Integer> singleIntPropSet = new PropSet<Integer>() {
             @Override
             public Set<String> propKeys() {
-                return new HashSet<>(Arrays.asList("test.key"));
+                return new HashSet<String>(Arrays.asList("test.key"));
             }
 
             @Override
@@ -190,7 +190,7 @@ class GoodTestPropSet implements PropSet<GoodTestPropSetVals> {
 
     @Override
     public Set<String> propKeys() {
-        return new LinkedHashSet<>(Arrays.asList("test.s", "test.t", "test.i"));
+        return new LinkedHashSet<String>(Arrays.asList("test.s", "test.t", "test.i"));
     }
 
     @Override
@@ -217,7 +217,7 @@ class BadAccessPropSet implements PropSet<Object> {
 
     @Override
     public Set<String> propKeys() {
-        return new LinkedHashSet<>(Arrays.asList("test.prop"));
+        return new LinkedHashSet<String>(Arrays.asList("test.prop"));
     }
 
     @Override
@@ -238,7 +238,7 @@ class BadImplPropSet implements PropSet<Object> {
 
     @Override
     public Set<String> propKeys() {
-        return new LinkedHashSet<>(Arrays.asList("test.prop"));
+        return new LinkedHashSet<String>(Arrays.asList("test.prop"));
     }
 
     @Override

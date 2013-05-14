@@ -65,7 +65,7 @@ public class PropSetAsPropSlice extends PropsSlice implements PropSet<PropsSlice
      * @param source to clone vals from
      */
     public PropSetAsPropSlice(final PropSource source, final Collection<String> propKeys) {
-        this(source, new HashSet<>(propKeys));
+        this(source, new HashSet<String>(propKeys));
     }
 
     /**
@@ -73,7 +73,7 @@ public class PropSetAsPropSlice extends PropsSlice implements PropSet<PropsSlice
      */
     public PropSetAsPropSlice(final PropSource source, final Set<String> propKeys) {
         super(source, propKeys);
-        this.propKeys = Collections.unmodifiableSet(new HashSet<>(propKeys));
+        this.propKeys = Collections.unmodifiableSet(new HashSet<String>(propKeys));
     }
 
     /**

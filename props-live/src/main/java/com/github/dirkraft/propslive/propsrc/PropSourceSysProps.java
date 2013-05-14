@@ -31,7 +31,7 @@ public class PropSourceSysProps implements PropSource {
      */
     @Override
     public Map<String, String> asMap() {
-        Map<String, String> map = new HashMap<>();
+        Map<String, String> map = new HashMap<String, String>();
         for (Map.Entry<Object, Object> entry : System.getProperties().entrySet()) {
             map.put(entry.getKey().toString(), entry.getValue().toString());
         }

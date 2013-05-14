@@ -30,7 +30,7 @@ public interface Props extends PropSource {
      *     <li>String</li>
      * </ul>
      */
-    public static final Set<Class<?>> COVERED_CLASSES = Collections.<Class<?>>unmodifiableSet(new HashSet<>(Arrays.asList(
+    public static final Set<Class<?>> COVERED_CLASSES = Collections.<Class<?>>unmodifiableSet(new HashSet<Class<?>>(Arrays.asList(
             Boolean.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class,
             Character.class, String.class, Enum.class
     )));

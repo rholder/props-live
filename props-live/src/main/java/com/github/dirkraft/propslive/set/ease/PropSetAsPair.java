@@ -33,7 +33,7 @@ public class PropSetAsPair implements PropSet<Pair<String, String>> {
 
     @Override
     public Set<String> propKeys() {
-        return new HashSet<>(Arrays.asList(leftKey, rightKey));
+        return new HashSet<String>(Arrays.asList(leftKey, rightKey));
     }
 
     @Override

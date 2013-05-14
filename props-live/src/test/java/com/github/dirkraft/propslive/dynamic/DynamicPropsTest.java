@@ -31,7 +31,7 @@ public class DynamicPropsTest<TEST_TARGET extends DynamicProps<?>> {
         this.$ = (TEST_TARGET) dynamicProps;
     }
 
-    private Holder<Integer> triggeredReload = new Holder<>(0);
+    private Holder<Integer> triggeredReload = new Holder<Integer>(0);
     private PropListener<Boolean> listener = new PropListener<Boolean>() {
         @Override
         public void reload(PropChange<Boolean> propChange) {
@@ -157,7 +157,7 @@ public class DynamicPropsTest<TEST_TARGET extends DynamicProps<?>> {
         $.setInt("test.int", 0);
 
         final AtomicInteger reloadCount = new AtomicInteger();
-        List<PropListener<?>> listeners = new ArrayList<>();
+        List<PropListener<?>> listeners = new ArrayList<PropListener<?>>();
         for (int i = 0; i < 64; i++) {
             PropListener<Integer> listener = new PropListener<Integer>() {
                 @Override

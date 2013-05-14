@@ -55,7 +55,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
 
     @Test
     public void testPropSetListenersOnSingularPropChanges() {
-        final Holder<Integer> reloadCount = new Holder<>(0);
+        final Holder<Integer> reloadCount = new Holder<Integer>(0);
         // look at this beast.
         DelegatingAbstractListeningPropSet<PropsSlice> listener = new DelegatingAbstractListeningPropSet<PropsSlice>(
             // delegate PropSet impl
@@ -93,7 +93,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
 
     @Test
     public void testPropSetListenersOnPropSetChanges() {
-        final Holder<Integer> reloadCountAB = new Holder<>(0);
+        final Holder<Integer> reloadCountAB = new Holder<Integer>(0);
         LivePropSet propSetAndListenerAB = new LivePropSet("test.a", "test.b") {
             {
                 setString("test.a", "Astring");
@@ -106,7 +106,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
             }
         };
 
-        final Holder<Integer> reloadCountABC = new Holder<>(0);
+        final Holder<Integer> reloadCountABC = new Holder<Integer>(0);
         LivePropSet propSetAndListenerABC = new LivePropSet("test.a", "test.b", "test.c") {
             {
                 setString("test.a", "a-string");
@@ -180,7 +180,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
         Assert.assertEquals(4, reloadCountAB.value.intValue());
         Assert.assertEquals(3, reloadCountABC.value.intValue());
 
-        final Holder<Integer> reloadCountBCD = new Holder<>(0);
+        final Holder<Integer> reloadCountBCD = new Holder<Integer>(0);
         LivePropSet propSetAndListenerBCD = new LivePropSet("test.b", "test.c", "test.d") {
             {
                 setString("test.b", "B is in the house");
@@ -232,7 +232,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
         $.to(ab).getVals(ab);
         $.to(de).getVals(de);
 
-        final Holder<Boolean> exceptionOccurred = new Holder<>(false);
+        final Holder<Boolean> exceptionOccurred = new Holder<Boolean>(false);
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         { // randomizes values in abc and writes them
             final long randomSeed = System.currentTimeMillis();
@@ -292,7 +292,7 @@ public class DynamicPropsSetsTest extends DynamicPropsTest<DynamicPropsSets> { /
         $.to(abc).getVals(abc);
         $.to(cde).getVals(cde);
 
-        final Holder<Boolean> exceptionOccurred = new Holder<>(false);
+        final Holder<Boolean> exceptionOccurred = new Holder<Boolean>(false);
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         { // randomizes values in abc and writes them
             final long randomSeed = System.currentTimeMillis();

@@ -16,7 +16,7 @@ import java.util.concurrent.locks.ReadWriteLock;
  */
 public class ComboLock implements ReadWriteLock {
 
-    private static final ThreadLocal<Lock> comboWriteLock_acquireFail = new ThreadLocal<>();
+    private static final ThreadLocal<Lock> comboWriteLock_acquireFail = new ThreadLocal<Lock>();
 
     private final Lock comboReadLock;
     private final Lock comboWriteLock;
@@ -26,8 +26,8 @@ public class ComboLock implements ReadWriteLock {
     }
 
     public ComboLock(Collection<ReadWriteLock> constituentLocks) {
-        final List<Lock> readLocks = new ArrayList<>(constituentLocks.size());
-        final List<Lock> writeLocks = new ArrayList<>(constituentLocks.size());
+        final List<Lock> readLocks = new ArrayList<Lock>(constituentLocks.size());
+        final List<Lock> writeLocks = new ArrayList<Lock>(constituentLocks.size());
 
         for (ReadWriteLock constituentLock : constituentLocks) {
             readLocks.add(constituentLock.readLock());

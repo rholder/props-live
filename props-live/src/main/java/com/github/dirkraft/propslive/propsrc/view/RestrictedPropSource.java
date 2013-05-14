@@ -30,7 +30,7 @@ public class RestrictedPropSource implements PropSource {
     }
 
     public RestrictedPropSource(PropSource propSource, Collection<String> propKeys) {
-        this(propSource, new HashSet<>(propKeys));
+        this(propSource, new HashSet<String>(propKeys));
     }
 
     public RestrictedPropSource(PropSource propSource, Set<String> propKeys) {
@@ -49,7 +49,7 @@ public class RestrictedPropSource implements PropSource {
      */
     @Override
     public Map<String, String> asMap() {
-        Map<String, String> map = new HashMap<>(propKeys.size());
+        Map<String, String> map = new HashMap<String, String>(propKeys.size());
         for (String propKey : propKeys) {
             map.put(propKey, this.getString(propKey));
         }
